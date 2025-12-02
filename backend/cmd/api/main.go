@@ -28,4 +28,9 @@ func main() {
 	defer func() {
 		_ = logger.Sync()
 	}()
+
+	logger.Info("Starting Password Manager API Server",
+		zap.String("env", cfg.Server.Env),
+		zap.String("port", cfg.Server.Port),
+	)
 }
