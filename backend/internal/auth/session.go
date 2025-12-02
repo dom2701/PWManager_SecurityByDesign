@@ -181,8 +181,6 @@ func generateSessionID() (string, error) {
 // parseInt64 safely parses an int64 from a string
 func parseInt64(s string) int64 {
 	var i int64
-	fmt.Sscanf(s, "%d", &i)
-
 	if _, err := fmt.Sscanf(s, "%d", &i); err != nil {
 		return 0
 	}
