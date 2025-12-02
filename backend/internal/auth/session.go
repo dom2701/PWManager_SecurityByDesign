@@ -182,5 +182,9 @@ func generateSessionID() (string, error) {
 func parseInt64(s string) int64 {
 	var i int64
 	fmt.Sscanf(s, "%d", &i)
+
+	if _, err := fmt.Sscanf(s, "%d", &i); err != nil {
+		return 0
+	}
 	return i
 }
