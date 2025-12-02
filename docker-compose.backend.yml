@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Datenbank
+  postgres:
+    image: postgres:16-alpine
+    container_name: pwmanager-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pwmanager_user
+      POSTGRES_PASSWORD: secure_password_change_me
+      POSTGRES_DB: pwmanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pwmanager-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pwmanager_user -d pwmanager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pwmanager-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pwmanager-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+  # Backend API (Go)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pwmanager-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Server
+      PORT: 8080
+      ENV: development
+      GIN_MODE: debug
+
+      # Database
+      DATABASE_URL: postgres://pwmanager_user:secure_password_change_me@postgres:5432/pwmanager?sslmode=disable
+
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+
+      # Security - CHANGE THESE IN PRODUCTION!
+      SESSION_SECRET: dev_session_secret_please_change_in_production_min_32_chars
+      MASTER_ENCRYPTION_KEY: dev_master_key_please_change_in_production_min_32_chars
+
+      # Session Configuration
+      SESSION_MAX_AGE: 3600
+      SESSION_IDLE_TIMEOUT: 1800
+
+      # Rate Limiting
+      RATE_LIMIT_REQUESTS_PER_MINUTE: 60
+
+      # CORS
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+
+      # Argon2id Parameters
+      ARGON2_MEMORY: 65536
+      ARGON2_ITERATIONS: 3
+      ARGON2_PARALLELISM: 4
+      ARGON2_SALT_LENGTH: 16
+      ARGON2_KEY_LENGTH: 32
+
+      # Logging
+      LOG_LEVEL: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pwmanager-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  pwmanager-network:
+    driver: bridge
