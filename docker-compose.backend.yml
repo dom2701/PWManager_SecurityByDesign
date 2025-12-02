@@ -22,6 +22,25 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pwmanager-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pwmanager-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
 
   # Backend API (Go)
   backend:
@@ -43,7 +62,7 @@ services:
 
       # Redis
       REDIS_URL: redis://redis:6379/0
-      
+
       # Security - CHANGE THESE IN PRODUCTION!
       SESSION_SECRET: dev_session_secret_please_change_in_production_min_32_chars
       MASTER_ENCRYPTION_KEY: dev_master_key_please_change_in_production_min_32_chars
@@ -70,11 +89,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - pwmanager-network
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:
