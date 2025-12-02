@@ -9,7 +9,7 @@ import (
 func main() {
 
 	// Initialize logger
-	ar logger *zap.Logger
+	var logger *zap.Logger
 	if cfg.IsDevelopment() {
 		logger, err = zap.NewDevelopment()
 	} else {
