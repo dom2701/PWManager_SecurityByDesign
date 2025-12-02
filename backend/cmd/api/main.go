@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
 	"github.com/SecurityByDesign/pwmanager/internal/config"
@@ -33,4 +35,17 @@ func main() {
 		zap.String("env", cfg.Server.Env),
 		zap.String("port", cfg.Server.Port),
 	)
+
+	// Connect to PostgreSQL
+	db, err := sqlx.Connect("postgres", cfg.Database.URL)
+	if err != nil {
+		logger.Fatal("Failed to connect to database", zap.Error(err))
+	}
+	defer db.Close()
+
+	// Test database connection
+	if err := db.Ping(); err != nil {
+		logger.Fatal("Failed to ping database", zap.Error(err))
+	}
+	logger.Info("Connected to PostgreSQL database")
 }
