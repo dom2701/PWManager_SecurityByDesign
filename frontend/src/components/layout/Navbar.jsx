@@ -53,11 +53,11 @@ export default function Navbar() {
           </button>
 
           {open && (
-            <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 z-50">
+            <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
               <div className="py-1" role="menu" aria-orientation="vertical">
-                <a href="/profile" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600" role="menuitem">Profil bearbeiten</a>
-                <a href="/audits" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600" role="menuitem">Audits</a>
-                <button onClick={() => { setOpen(false); try { handleLogout() } catch (e) { console.warn(e) } clearSession(); window.location.href = '/login' }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600" role="menuitem">Logout</button>
+                <a href="/profile" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Profil bearbeiten</a>
+                <a href="/audits" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Audits</a>
+                <button onClick={() => { setOpen(false); try { handleLogout() } catch (e) { console.warn(e) } clearSession(); window.location.href = '/login' }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Logout</button>
               </div>
             </div>
           )}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { handleLoginSubmit } from '../../handlers/authHandlers'
 import { LoginFormValues, LoginFormProps, LoginResponse } from "../../types/auth";
 
-export default function LoginForm(): JSX.Element {
+export default function LoginForm(): React.ReactElement {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
