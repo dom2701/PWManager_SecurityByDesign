@@ -136,7 +136,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie(
 		"session_id",
 		session.ID,
-		int(session.ExpiresAt.Sub(time.Now()).Seconds()),
+		int(time.Until(session.ExpiresAt).Seconds()),
 		"/",
 		"",
 		false, // Set to true in production with HTTPS
