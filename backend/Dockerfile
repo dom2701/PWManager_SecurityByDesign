@@ -22,7 +22,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api ./cmd/api
 
 # Build the migration tool
-#RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrate ./cmd/migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrate ./cmd/migrate
 
 # Development stage
 FROM golang:1.23-alpine AS development
@@ -48,10 +48,10 @@ WORKDIR /app
 
 # Copy binaries from builder
 COPY --from=builder /app/api /app/api
-#COPY --from=builder /app/migrate /app/migrate
+COPY --from=builder /app/migrate /app/migrate
 
 # Copy migrations
-#COPY --from=builder /app/migrations /app/migrations
+COPY --from=builder /app/migrations /app/migrations
 
 # Change ownership
 RUN chown -R appuser:appuser /app
