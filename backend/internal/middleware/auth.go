@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/SecurityByDesign/pwmanager/internal/auth"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/pwmanager/internal/auth"
 )
 
 // AuthMiddleware checks for valid session
