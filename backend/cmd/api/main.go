@@ -22,8 +22,31 @@ import (
 	"github.com/SecurityByDesign/pwmanager/internal/middleware"
 	"github.com/SecurityByDesign/pwmanager/internal/repository"
 	"github.com/SecurityByDesign/pwmanager/pkg/crypto"
+
+	_ "github.com/SecurityByDesign/pwmanager/docs" // Import generated docs
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Password Manager API
+// @version         1.0
+// @description     A secure password manager API with encryption and audit logging.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name    API Support
+// @contact.url     http://www.swagger.io/support
+// @contact.email   support@swagger.io
+
+// @license.name    Apache 2.0
+// @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host            localhost:8080
+// @BasePath        /api
+// @schemes         http https
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// Load configuration
 	cfg, err := config.Load()
@@ -113,6 +136,9 @@ func main() {
 	router.Use(middleware.RecoveryMiddleware(logger))
 	router.Use(middleware.LoggingMiddleware(logger))
 	router.Use(middleware.CORSMiddleware(cfg.CORS.AllowedOrigins))
+
+	// Swagger Documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
