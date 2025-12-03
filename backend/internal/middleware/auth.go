@@ -31,7 +31,7 @@ func AuthMiddleware(sessionManager *auth.SessionManager) gin.HandlerFunc {
 		// Update last seen timestamp
 		if err := sessionManager.UpdateLastSeen(c.Request.Context(), sessionID); err != nil {
 			// Log error but don't fail the request
-			c.Error(err)
+			_ = c.Error(err)
 		}
 
 		// Store user ID in context for handlers
