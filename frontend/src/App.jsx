@@ -1,19 +1,25 @@
-function App() {
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import LoginPage from './pages/Auth/LoginPage'
+import RegisterPage from './pages/Auth/RegisterPage'
+import DashboardPage from './pages/Dashboard/DashboardPage'
+import VaultPage from './pages/Vault/VaultPage'
+import AuditPage from './pages/Audit/AuditPage'
+import SettingsPage from './pages/Settings/SettingsPage'
+import LayoutWrapper from './components/layout/LayoutWrapper'
+
+export default function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-xl w-full text-center p-10 bg-white/90 dark:bg-gray-800/60 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-        <h1 className="text-4xl font-extrabold mb-4">Willkommen bei unserem PWManager</h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">TailwindCss erfolgreich eingebunden.</p>
-
-        <div className="flex justify-center gap-3">
-          <a href="#" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Los geht's</a>
-          <a href="#" className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200">Mehr erfahren</a>
-        </div>
-
-        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">Vite + React + Tailwind</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<LayoutWrapper><DashboardPage /></LayoutWrapper>} />
+        <Route path="/vault/:vaultId" element={<LayoutWrapper><VaultPage /></LayoutWrapper>} />
+        <Route path="/audits" element={<LayoutWrapper><AuditPage /></LayoutWrapper>} />
+        <Route path="/profile" element={<LayoutWrapper><SettingsPage /></LayoutWrapper>} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
