@@ -67,15 +67,13 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
-      # 
-      # - name: Run type check
-      #   working-directory: frontend
-      #   run: npm run type-check
-
   # Security Scanning
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     needs: [backend-test, frontend-test]
     
     steps:
