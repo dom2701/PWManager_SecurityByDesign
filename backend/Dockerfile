@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Go Backend
 
 # Stage 1: Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev
@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api ./cmd/api
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrate ./cmd/migrate
 
 # Development stage
-FROM golang:1.23-alpine AS development
+FROM golang:1.24-alpine AS development
 WORKDIR /app
 RUN apk add --no-cache git
 COPY go.mod go.sum ./
