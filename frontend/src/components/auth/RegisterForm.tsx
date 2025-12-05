@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { registerUser } from '../../services/auth'
 import { startSession } from '../../hooks/useSession'
 
 export default function RegisterForm() {
-  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -15,19 +15,38 @@ export default function RegisterForm() {
     e.preventDefault()
     setError(null)
     
+    // Validierungen
     if (password !== confirm) {
       setError('Passwörter stimmen nicht überein')
       return
     }
 
+    if (password.length < 12) {
+      setError('Passwort muss mindestens 12 Zeichen lang sein')
+      return
+    }
+
+    if (password.length > 128) {
+      setError('Passwort darf maximal 128 Zeichen lang sein')
+      return
+    }
+
     setLoading(true)
     try {
-      // Dummy-Modus: Erfolgreiche Registrierung simulieren
-      const dummyToken = 'dummy_token_' + Date.now()
-      startSession(dummyToken)
-      navigate('/dashboard')
+      const response = await registerUser(email, password)
+      
+      if (response && (response.user || response.message === 'user registered successfully')) {
+        // Session-Cookie wird vom Backend automatisch gesetzt
+        // Zu Dashboard navigieren
+        navigate('/dashboard')
+      } else {
+        setError('Registrierung erfolgreich, aber keine gültige Antwort erhalten')
+      }
     } catch (err: any) {
-      setError(err?.message || 'Netzwerkfehler')
+      // Fehlerbehandlung
+      const errorMessage = err?.data?.error || err?.message || 'Registrierungsfehler'
+      setError(errorMessage)
+      console.error('Registration error:', err)
     } finally {
       setLoading(false)
     }
@@ -36,20 +55,6 @@ export default function RegisterForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-
-      <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Nutzername
-        </label>
-        <input
-          id="username"
-          type="text"
-          required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -61,18 +66,21 @@ export default function RegisterForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
           className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Passwort
+          Passwort (12-128 Zeichen)
         </label>
         <input
           id="password"
           type="password"
           required
+          minLength={12}
+          maxLength={128}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"

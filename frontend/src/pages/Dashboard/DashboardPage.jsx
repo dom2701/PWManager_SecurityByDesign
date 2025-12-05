@@ -1,53 +1,50 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-// Statische Test-Daten
-const staticVaults = [
-  {
-    id: 1,
-    name: 'Persönlich',
-    description: 'Private Accounts und Passwörter',
-    icon: '🔐',
-    entriesCount: 8,
-    lastModified: '2024-12-01',
-    color: 'bg-blue-500'
-  },
-  {
-    id: 2,
-    name: 'Arbeit',
-    description: 'Firmen-Accounts und Tools',
-    icon: '💼',
-    entriesCount: 12,
-    lastModified: '2024-11-28',
-    color: 'bg-green-500'
-  },
-  {
-    id: 3,
-    name: 'Banking',
-    description: 'Bank- und Finanz-Zugänge',
-    icon: '🏦',
-    entriesCount: 5,
-    lastModified: '2024-11-25',
-    color: 'bg-purple-500'
-  },
-  {
-    id: 4,
-    name: 'Social Media',
-    description: 'Social Network Accounts',
-    icon: '📱',
-    entriesCount: 6,
-    lastModified: '2024-12-02',
-    color: 'bg-pink-500'
-  },
-]
+import { getVaults, createVault } from '../../services/api/endpoints'
+import CreateVaultModal from '../../components/CreateVaultModal'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
+  const [vaults, setVaults] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const filteredVaults = staticVaults.filter(vault =>
-    vault.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vault.description.toLowerCase().includes(searchTerm.toLowerCase())
+  // Load vaults from backend
+  useEffect(() => {
+    loadVaults()
+  }, [])
+
+  async function loadVaults() {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getVaults()
+      // Backend returns array directly, not wrapped in object
+      setVaults(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('Failed to load vaults:', err)
+      setError('Fehler beim Laden der Vaults')
+      setVaults([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleCreateVault(vaultData) {
+    try {
+      const newVault = await createVault(vaultData)
+      // Reload vaults after creation
+      await loadVaults()
+      return newVault
+    } catch (err) {
+      throw new Error(err?.data?.error || err?.message || 'Fehler beim Erstellen')
+    }
+  }
+
+  const filteredVaults = vaults.filter(vault =>
+    vault.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleVaultClick = (vaultId) => {
@@ -68,7 +65,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <button
-            onClick={() => alert('Neuen Vault erstellen (Funktion folgt)')}
+            onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +108,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt Vaults</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{staticVaults.length}</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{vaults.length}</p>
             </div>
             <div className="text-4xl">📁</div>
           </div>
@@ -121,7 +118,7 @@ export default function DashboardPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt Passwörter</p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {staticVaults.reduce((sum, v) => sum + v.entriesCount, 0)}
+                {vaults.reduce((sum, v) => sum + (v.entries_count || 0), 0)}
               </p>
             </div>
             <div className="text-4xl">🔑</div>
@@ -138,54 +135,77 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Vaults Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVaults.map((vault) => (
-          <div
-            key={vault.id}
-            onClick={() => handleVaultClick(vault.id)}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 hover:border-indigo-500 dark:hover:border-indigo-400"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`${vault.color} w-12 h-12 rounded-lg flex items-center justify-center text-2xl`}>
-                {vault.icon}
-              </div>
-              <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
-                {vault.entriesCount} Einträge
-              </span>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              {vault.name}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-              {vault.description}
-            </p>
-            <div className="flex items-center text-xs text-gray-500 dark:text-gray-500">
-              <svg
-                className="h-4 w-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              {vault.lastModified}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredVaults.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔍</div>
-          <p className="text-gray-600 dark:text-gray-400">Keine Vaults gefunden</p>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         </div>
       )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded relative mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* Vaults Grid */}
+      {!loading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVaults.map((vault) => (
+            <div
+              key={vault.id}
+              onClick={() => handleVaultClick(vault.id)}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 hover:border-indigo-500 dark:hover:border-indigo-400"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="bg-indigo-500 w-12 h-12 rounded-lg flex items-center justify-center text-2xl">
+                  🔐
+                </div>
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
+                  {vault.entries_count || 0} Einträge
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {vault.name}
+              </h3>
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-500">
+                <svg
+                  className="h-4 w-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {vault.updated_at ? new Date(vault.updated_at).toLocaleDateString('de-DE') : 'Neu'}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && filteredVaults.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔍</div>
+          <p className="text-gray-600 dark:text-gray-400">
+            {searchTerm ? 'Keine Vaults gefunden' : 'Noch keine Vaults vorhanden. Erstelle deinen ersten Vault!'}
+          </p>
+        </div>
+      )}
+
+      {/* Create Vault Modal */}
+      <CreateVaultModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateVault}
+      />
     </div>
   )
 }
