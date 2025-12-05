@@ -40,6 +40,17 @@ func NewAuthHandler(
 }
 
 // Register handles user registration
+// @Summary      Register a new user
+// @Description  Register a new user with email and password
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body models.UserRegistrationRequest true "Registration Request"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      409  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req models.UserRegistrationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -87,6 +98,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login handles user login
+// @Summary      Login user
+// @Description  Login with email and password to receive a session cookie
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body models.UserLoginRequest true "Login Request"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.UserLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -154,6 +176,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Logout handles user logout
+// @Summary      Logout user
+// @Description  Invalidate current session and clear cookie
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -185,6 +215,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // Me returns current user info
+// @Summary      Get current user
+// @Description  Get information about the currently logged-in user
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  models.UserResponse
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {

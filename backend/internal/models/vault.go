@@ -33,6 +33,7 @@ type VaultResponse struct {
 	UserID         uuid.UUID `json:"user_id"`
 	Name           string    `json:"name"`
 	EncryptionSalt string    `json:"encryption_salt"` // Hex-encoded
+	EntriesCount   int       `json:"entries_count"`   // Number of entries in vault
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }

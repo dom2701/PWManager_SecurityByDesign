@@ -15,6 +15,7 @@ import (
 // VaultHandler handles vault-related requests
 type VaultHandler struct {
 	vaultRepo *repository.VaultRepository
+	entryRepo *repository.EntryRepository
 	auditRepo *repository.AuditRepository
 	logger    *zap.Logger
 }
@@ -22,17 +23,30 @@ type VaultHandler struct {
 // NewVaultHandler creates a new vault handler
 func NewVaultHandler(
 	vaultRepo *repository.VaultRepository,
+	entryRepo *repository.EntryRepository,
 	auditRepo *repository.AuditRepository,
 	logger *zap.Logger,
 ) *VaultHandler {
 	return &VaultHandler{
 		vaultRepo: vaultRepo,
+		entryRepo: entryRepo,
 		auditRepo: auditRepo,
 		logger:    logger,
 	}
 }
 
 // Create creates a new vault
+// @Summary      Create a new vault
+// @Description  Create a new password vault with encryption salt
+// @Tags         vaults
+// @Accept       json
+// @Produce      json
+// @Param        request body models.VaultCreateRequest true "Vault Creation Request"
+// @Success      201  {object}  models.VaultResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /vaults [post]
 func (h *VaultHandler) Create(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -73,12 +87,21 @@ func (h *VaultHandler) Create(c *gin.Context) {
 		UserID:         vault.UserID,
 		Name:           vault.Name,
 		EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+		EntriesCount:   0, // New vault has no entries
 		CreatedAt:      vault.CreatedAt,
 		UpdatedAt:      vault.UpdatedAt,
 	})
 }
 
 // List lists all vaults for the current user
+// @Summary      List vaults
+// @Description  Get all vaults belonging to the current user
+// @Tags         vaults
+// @Produce      json
+// @Success      200  {array}   models.VaultResponse
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /vaults [get]
 func (h *VaultHandler) List(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -96,11 +119,19 @@ func (h *VaultHandler) List(c *gin.Context) {
 	// Convert to response format
 	responses := make([]models.VaultResponse, len(vaults))
 	for i, vault := range vaults {
+		// Count entries for this vault
+		entryCount, err := h.entryRepo.CountByVaultID(c.Request.Context(), vault.ID)
+		if err != nil {
+			h.logger.Error("failed to count entries", zap.Error(err))
+			entryCount = 0
+		}
+
 		responses[i] = models.VaultResponse{
 			ID:             vault.ID,
 			UserID:         vault.UserID,
 			Name:           vault.Name,
 			EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+			EntriesCount:   entryCount,
 			CreatedAt:      vault.CreatedAt,
 			UpdatedAt:      vault.UpdatedAt,
 		}
@@ -110,6 +141,17 @@ func (h *VaultHandler) List(c *gin.Context) {
 }
 
 // Get retrieves a single vault
+// @Summary      Get vault
+// @Description  Get details of a specific vault
+// @Tags         vaults
+// @Produce      json
+// @Param        id   path      string  true  "Vault ID"
+// @Success      200  {object}  models.VaultResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /vaults/{id} [get]
 func (h *VaultHandler) Get(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -143,17 +185,37 @@ func (h *VaultHandler) Get(c *gin.Context) {
 		return
 	}
 
+	// Count entries for this vault
+	entryCount, err := h.entryRepo.CountByVaultID(c.Request.Context(), vaultID)
+	if err != nil {
+		h.logger.Error("failed to count entries", zap.Error(err))
+		entryCount = 0
+	}
+
 	c.JSON(http.StatusOK, models.VaultResponse{
 		ID:             vault.ID,
 		UserID:         vault.UserID,
 		Name:           vault.Name,
 		EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+		EntriesCount:   entryCount,
 		CreatedAt:      vault.CreatedAt,
 		UpdatedAt:      vault.UpdatedAt,
 	})
 }
 
 // Update updates a vault's name
+// @Summary      Update vault
+// @Description  Update the name of a vault
+// @Tags         vaults
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string  true  "Vault ID"
+// @Param        request  body      models.VaultUpdateRequest  true  "Update Request"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /vaults/{id} [put]
 func (h *VaultHandler) Update(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -197,6 +259,16 @@ func (h *VaultHandler) Update(c *gin.Context) {
 }
 
 // Delete deletes a vault
+// @Summary      Delete vault
+// @Description  Delete a vault and all its entries
+// @Tags         vaults
+// @Produce      json
+// @Param        id   path      string  true  "Vault ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /vaults/{id} [delete]
 func (h *VaultHandler) Delete(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {

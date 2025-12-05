@@ -36,6 +36,18 @@ func NewEntryHandler(
 }
 
 // Create creates a new vault entry
+// @Summary      Create vault entry
+// @Description  Create a new encrypted entry in a vault
+// @Tags         entries
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string  true  "Vault ID"
+// @Param        request  body      models.VaultEntryCreateRequest  true  "Entry Creation Request"
+// @Success      201      {object}  models.VaultEntryResponse
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /vaults/{id}/entries [post]
 func (h *EntryHandler) Create(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -101,6 +113,16 @@ func (h *EntryHandler) Create(c *gin.Context) {
 }
 
 // List lists all entries in a vault
+// @Summary      List vault entries
+// @Description  Get all encrypted entries in a specific vault
+// @Tags         entries
+// @Produce      json
+// @Param        id   path      string  true  "Vault ID"
+// @Success      200  {array}   models.VaultEntryResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /vaults/{id}/entries [get]
 func (h *EntryHandler) List(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -145,6 +167,16 @@ func (h *EntryHandler) List(c *gin.Context) {
 }
 
 // Get retrieves a single entry
+// @Summary      Get vault entry
+// @Description  Get a specific encrypted entry
+// @Tags         entries
+// @Produce      json
+// @Param        id   path      string  true  "Entry ID"
+// @Success      200  {object}  models.VaultEntryResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Router       /entries/{id} [get]
 func (h *EntryHandler) Get(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -182,6 +214,19 @@ func (h *EntryHandler) Get(c *gin.Context) {
 }
 
 // Update updates an entry
+// @Summary      Update vault entry
+// @Description  Update an encrypted entry
+// @Tags         entries
+// @Accept       json
+// @Produce      json
+// @Param        id       path      string  true  "Entry ID"
+// @Param        request  body      models.VaultEntryUpdateRequest  true  "Update Request"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  map[string]string
+// @Failure      403      {object}  map[string]string
+// @Failure      404      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /entries/{id} [put]
 func (h *EntryHandler) Update(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -244,6 +289,17 @@ func (h *EntryHandler) Update(c *gin.Context) {
 }
 
 // Delete deletes an entry
+// @Summary      Delete vault entry
+// @Description  Delete an encrypted entry
+// @Tags         entries
+// @Produce      json
+// @Param        id   path      string  true  "Entry ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      403  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /entries/{id} [delete]
 func (h *EntryHandler) Delete(c *gin.Context) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
