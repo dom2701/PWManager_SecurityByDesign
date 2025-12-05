@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getVaults, createVault } from '../../services/api/endpoints'
+import { getVaults, createVault, deleteVault } from '../../services/api/endpoints'
 import CreateVaultModal from '../../components/CreateVaultModal'
+import { storeMasterPassword } from '../../utils/masterPassword'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -34,12 +35,45 @@ export default function DashboardPage() {
 
   async function handleCreateVault(vaultData) {
     try {
-      const newVault = await createVault(vaultData)
+      // Extract master password and validation data before sending to backend
+      const { master_password, validation_hash, validation_nonce, ...backendData } = vaultData
+      
+      // Create vault on backend (without master password, but with validation hash)
+      const newVault = await createVault(backendData)
+      
+      // Store master password locally (Zero-Knowledge)
+      if (master_password && newVault.id) {
+        storeMasterPassword(newVault.id, master_password)
+      }
+      
+      // Store validation hash in localStorage (client-side validation)
+      if (validation_hash && validation_nonce && newVault.id) {
+        localStorage.setItem(`vault_validation_${newVault.id}`, JSON.stringify({
+          hash: validation_hash,
+          nonce: validation_nonce
+        }))
+      }
+      
       // Reload vaults after creation
       await loadVaults()
       return newVault
     } catch (err) {
       throw new Error(err?.data?.error || err?.message || 'Fehler beim Erstellen')
+    }
+  }
+
+  async function handleDeleteVault(vaultId, vaultName) {
+    if (!confirm(`Vault "${vaultName}" wirklich löschen? Alle Einträge werden ebenfalls gelöscht!`)) {
+      return
+    }
+
+    try {
+      await deleteVault(vaultId)
+      // Reload vaults after deletion
+      await loadVaults()
+    } catch (err) {
+      console.error('Failed to delete vault:', err)
+      setError(err?.data?.error || err?.message || 'Fehler beim Löschen des Vaults')
     }
   }
 
@@ -155,23 +189,19 @@ export default function DashboardPage() {
           {filteredVaults.map((vault) => (
             <div
               key={vault.id}
-              onClick={() => handleVaultClick(vault.id)}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 hover:border-indigo-500 dark:hover:border-indigo-400"
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 transition-all hover:shadow-lg hover:border-indigo-500 dark:hover:border-indigo-400 relative group"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="bg-indigo-500 w-12 h-12 rounded-lg flex items-center justify-center text-2xl">
-                  🔐
-                </div>
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-full">
-                  {vault.entries_count || 0} Einträge
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {vault.name}
-              </h3>
-              <div className="flex items-center text-xs text-gray-500 dark:text-gray-500">
+              {/* Delete Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteVault(vault.id, vault.name)
+                }}
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                title="Vault löschen"
+              >
                 <svg
-                  className="h-4 w-4 mr-1"
+                  className="h-5 w-5 text-red-600 dark:text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -180,10 +210,45 @@ export default function DashboardPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                   />
                 </svg>
-                {vault.updated_at ? new Date(vault.updated_at).toLocaleDateString('de-DE') : 'Neu'}
+              </button>
+
+              {/* Vault Content - clickable */}
+              <div
+                onClick={() => handleVaultClick(vault.id)}
+                className="cursor-pointer"
+              >
+                <div className="flex items-start mb-4">
+                  <div className="bg-indigo-500 w-12 h-12 rounded-lg flex items-center justify-center text-2xl">
+                    🔐
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  {vault.name}
+                </h3>
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+                  <div className="flex items-center">
+                    <svg
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {vault.updated_at ? new Date(vault.updated_at).toLocaleDateString('de-DE') : 'Neu'}
+                  </div>
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">
+                    {vault.entries_count || 0} Einträge
+                  </span>
+                </div>
               </div>
             </div>
           ))}

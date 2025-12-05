@@ -78,23 +78,21 @@ export const createVaultEntry = (vaultId, entryData) => {
 
 /**
  * Update vault entry
- * @param {string} vaultId - Vault ID
  * @param {string} entryId - Entry ID
  * @param {object} entryData - Updated entry data
  * @returns {Promise} Updated entry
  */
-export const updateVaultEntry = (vaultId, entryId, entryData) => {
-  return api.put(`/vaults/${vaultId}/entries/${entryId}`, entryData)
+export const updateVaultEntry = (entryId, entryData) => {
+  return api.put(`/entries/${entryId}`, entryData)
 }
 
 /**
  * Delete vault entry
- * @param {string} vaultId - Vault ID
  * @param {string} entryId - Entry ID
  * @returns {Promise} Delete response
  */
-export const deleteVaultEntry = (vaultId, entryId) => {
-  return api.del(`/vaults/${vaultId}/entries/${entryId}`)
+export const deleteVaultEntry = (entryId) => {
+  return api.del(`/entries/${entryId}`)
 }
 
 // ========================

@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react'
 import ThemeToggle from '../ui/ThemeToggle'
-import CountdownTimer from '../ui/CountdownTimer'
 import { clearSession } from '../../hooks/useSession'
 import { logoutUser } from '../../services/auth'
+import { useAutoLogoutContext } from '../../context/AutoLogoutContext'
 
 export default function Navbar() {
+  const { remainingSeconds } = useAutoLogoutContext()
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
   return (
     <header className="antialiased">
       <nav className="bg-white border-b border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -18,9 +26,11 @@ export default function Navbar() {
           </div>
           
           {/* Right side */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 tabular-nums">
+              🕒 Auto-Logout: {formatTime(remainingSeconds)}
+            </span>
             <ThemeToggle />
-            <CountdownTimer initialSeconds={15 * 60} onExpire={() => console.log('Logout!')} />
             <UserDropdown />
           </div>
         </div>
