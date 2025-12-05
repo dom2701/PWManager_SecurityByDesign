@@ -136,14 +136,6 @@ const actionColors = {
   CHANGE_PASSWORD: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
 }
 
-const severityIcons = {
-  info: 'ℹ️',
-  low: '🔵',
-  warning: '⚠️',
-  high: '🔶',
-  critical: '🔴'
-}
-
 export default function AuditPage() {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')

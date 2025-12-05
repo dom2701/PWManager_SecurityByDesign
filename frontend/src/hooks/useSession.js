@@ -20,12 +20,12 @@ function expireSession() {
   // call backend logout, clear client tokens
   try {
     handleLogout()
-  } catch (e) {
+  } catch {
     // ignore
   }
-  try { localStorage.removeItem('authToken') } catch (e) {}
+  try { localStorage.removeItem('authToken') } catch { /* ignore */ }
   // navigate to login
-  try { window.location.href = '/login' } catch (e) {}
+  try { window.location.href = '/login' } catch { /* ignore */ }
 }
 
 function resetTimer() {
@@ -60,7 +60,7 @@ function detachListeners() {
 }
 
 export function startSession(token) {
-  try { if (token) localStorage.setItem('authToken', token) } catch (e) {}
+  try { if (token) localStorage.setItem('authToken', token) } catch { /* ignore */ }
   attachListeners()
   resetTimer()
 }
@@ -68,7 +68,7 @@ export function startSession(token) {
 export function clearSession() {
   clearTimer()
   detachListeners()
-  try { localStorage.removeItem('authToken') } catch (e) {}
+  try { localStorage.removeItem('authToken') } catch { /* ignore */ }
 }
 
 export function useSession() {
