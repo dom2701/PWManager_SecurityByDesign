@@ -136,7 +136,15 @@ export default function VaultPage() {
     const { encrypted_data, nonce } = await encryptData(formData, encryptionKey)
     
     await createVaultEntry(vaultId, { encrypted_data, nonce })
-    await loadVault()
+    
+    // Just reload entries without re-prompting for master password
+    const entriesData = await getVaultEntries(vaultId)
+    setEntries(Array.isArray(entriesData) ? entriesData : [])
+    
+    // Decrypt new entries with existing key
+    if (encryptionKey && entriesData.length > 0) {
+      await decryptAllEntries(entriesData, encryptionKey)
+    }
   }
 
   // Update entry
@@ -148,7 +156,15 @@ export default function VaultPage() {
     const { encrypted_data, nonce } = await encryptData(formData, encryptionKey)
     
     await updateVaultEntry(editingEntry.id, { encrypted_data, nonce })
-    await loadVault()
+    
+    // Just reload entries without re-prompting for master password
+    const entriesData = await getVaultEntries(vaultId)
+    setEntries(Array.isArray(entriesData) ? entriesData : [])
+    
+    // Decrypt updated entries with existing key
+    if (encryptionKey && entriesData.length > 0) {
+      await decryptAllEntries(entriesData, encryptionKey)
+    }
   }
 
   // Delete entry
@@ -159,7 +175,18 @@ export default function VaultPage() {
 
     try {
       await deleteVaultEntry(entryId)
-      await loadVault()
+      
+      // Just reload entries without re-prompting for master password
+      const entriesData = await getVaultEntries(vaultId)
+      setEntries(Array.isArray(entriesData) ? entriesData : [])
+      
+      // Decrypt remaining entries with existing key
+      if (encryptionKey && entriesData.length > 0) {
+        await decryptAllEntries(entriesData, encryptionKey)
+      } else {
+        // Clear decrypted entries if vault is now empty
+        setDecryptedEntries([])
+      }
     } catch (err) {
       console.error('Failed to delete entry:', err)
       setError('Fehler beim Löschen des Eintrags')

@@ -36,9 +36,8 @@ export default function RegisterForm() {
       const response = await registerUser(email, password)
       
       if (response && (response.user || response.message === 'user registered successfully')) {
-        // Session-Cookie wird vom Backend automatisch gesetzt
-        // Zu Dashboard navigieren
-        navigate('/dashboard')
+        // Zur Login-Seite navigieren
+        navigate('/login')
       } else {
         setError('Registrierung erfolgreich, aber keine gültige Antwort erhalten')
       }

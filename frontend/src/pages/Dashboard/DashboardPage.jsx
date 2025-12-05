@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getVaults, createVault, deleteVault } from '../../services/api/endpoints'
+import { getCurrentUser } from '../../services/auth'
 import CreateVaultModal from '../../components/CreateVaultModal'
 import { storeMasterPassword } from '../../utils/masterPassword'
 
@@ -11,11 +12,23 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
 
-  // Load vaults from backend
+  // Load vaults and current user from backend
   useEffect(() => {
     loadVaults()
+    loadCurrentUser()
   }, [])
+
+  async function loadCurrentUser() {
+    try {
+      const userData = await getCurrentUser()
+      setCurrentUser(userData)
+    } catch (err) {
+      console.error('Failed to load current user:', err)
+      // Don't show error if we can't load user, just continue
+    }
+  }
 
   async function loadVaults() {
     setLoading(true)
@@ -91,6 +104,11 @@ export default function DashboardPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <div>
+            <div className="mb-2">
+              <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                👋 Willkommen zurück, {currentUser?.email?.split('@')[0] || 'Benutzer'}!
+              </p>
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Meine Vaults
             </h1>
@@ -228,8 +246,8 @@ export default function DashboardPage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                   {vault.name}
                 </h3>
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-                  <div className="flex items-center">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-xs text-gray-500 dark:text-gray-500">
                     <svg
                       className="h-4 w-4 mr-1"
                       fill="none"
@@ -245,9 +263,14 @@ export default function DashboardPage() {
                     </svg>
                     {vault.updated_at ? new Date(vault.updated_at).toLocaleDateString('de-DE') : 'Neu'}
                   </div>
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full">
-                    {vault.entries_count || 0} Einträge
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                      {vault.entries_count || 0}
+                    </span>
+                    <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-medium rounded-full">
+                      {vault.entries_count === 1 ? 'Eintrag' : 'Einträge'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
