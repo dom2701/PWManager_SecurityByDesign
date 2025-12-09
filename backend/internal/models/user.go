@@ -25,6 +25,7 @@ type UserRegistrationRequest struct {
 type UserLoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+	MFACode  string `json:"mfa_code,omitempty"`
 }
 
 // UserResponse represents the user response (without sensitive data)

@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/base64"
+	"image/png"
 	"net/http"
 	"time"
 
@@ -10,31 +13,38 @@ import (
 	"github.com/SecurityByDesign/pwmanager/internal/repository"
 	"github.com/SecurityByDesign/pwmanager/pkg/crypto"
 	"github.com/gin-gonic/gin"
+	"github.com/pquerna/otp/totp"
 	"go.uber.org/zap"
 )
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
 	userRepo       *repository.UserRepository
+	mfaRepo        *repository.MFARepository
 	auditRepo      *repository.AuditRepository
 	sessionManager *auth.SessionManager
 	argon2Params   *crypto.Argon2Params
+	encryptionKey  string
 	logger         *zap.Logger
 }
 
 // NewAuthHandler creates a new auth handler
 func NewAuthHandler(
 	userRepo *repository.UserRepository,
+	mfaRepo *repository.MFARepository,
 	auditRepo *repository.AuditRepository,
 	sessionManager *auth.SessionManager,
 	argon2Params *crypto.Argon2Params,
+	encryptionKey string,
 	logger *zap.Logger,
 ) *AuthHandler {
 	return &AuthHandler{
 		userRepo:       userRepo,
+		mfaRepo:        mfaRepo,
 		auditRepo:      auditRepo,
 		sessionManager: sessionManager,
 		argon2Params:   argon2Params,
+		encryptionKey:  encryptionKey,
 		logger:         logger,
 	}
 }
@@ -146,6 +156,42 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Check MFA
+	mfa, err := h.mfaRepo.GetByUserID(c.Request.Context(), user.ID)
+	if err != nil {
+		h.logger.Error("failed to check mfa status", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if mfa != nil && mfa.Enabled {
+		if req.MFACode == "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "mfa_required", "message": "MFA code required"})
+			return
+		}
+
+		// Decrypt secret
+		secretBytes, err := crypto.Decrypt(mfa.TOTPSecretEncrypted, h.encryptionKey)
+		if err != nil {
+			h.logger.Error("failed to decrypt secret", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+
+		// Validate code
+		validMFA := totp.Validate(req.MFACode, string(secretBytes))
+		if !validMFA {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid mfa code"})
+			_ = h.auditRepo.Create(c.Request.Context(), &user.ID, models.ActionMFAFailed,
+				middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+			return
+		}
+
+		// Log MFA verification success
+		_ = h.auditRepo.Create(c.Request.Context(), &user.ID, models.ActionMFAVerified,
+			middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+	}
+
 	// Create session
 	session, err := h.sessionManager.CreateSession(c.Request.Context(), user.ID)
 	if err != nil {
@@ -238,4 +284,199 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user.ToResponse())
+}
+
+// SetupMFA initiates MFA setup
+// @Summary      Setup MFA
+// @Description  Generate TOTP secret and QR code
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  models.MFASetupResponse
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/mfa/setup [post]
+func (h *AuthHandler) SetupMFA(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	user, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to get user", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Check if MFA is already enabled
+	existingMFA, _ := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if existingMFA != nil && existingMFA.Enabled {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "MFA is already enabled"})
+		return
+	}
+
+	// Generate TOTP key
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "PWManager",
+		AccountName: user.Email,
+	})
+	if err != nil {
+		h.logger.Error("failed to generate totp key", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Encrypt secret
+	encryptedSecret, err := crypto.Encrypt([]byte(key.Secret()), h.encryptionKey)
+	if err != nil {
+		h.logger.Error("failed to encrypt secret", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Save to DB (or update if exists but not enabled)
+	mfa := &models.MFASecret{
+		UserID:              userID,
+		TOTPSecretEncrypted: encryptedSecret,
+		Method:              "totp",
+		Enabled:             false,
+	}
+
+	if existingMFA != nil {
+		mfa.ID = existingMFA.ID
+		err = h.mfaRepo.Update(c.Request.Context(), mfa)
+	} else {
+		err = h.mfaRepo.Create(c.Request.Context(), mfa)
+	}
+
+	if err != nil {
+		h.logger.Error("failed to save mfa secret", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Generate QR code
+	var buf bytes.Buffer
+	img, err := key.Image(200, 200)
+	if err != nil {
+		h.logger.Error("failed to generate qr code image", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	if err := png.Encode(&buf, img); err != nil {
+		h.logger.Error("failed to encode qr code", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	qrCodeBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
+
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionMFASetup,
+		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+
+	c.JSON(http.StatusOK, models.MFASetupResponse{
+		Secret: key.Secret(),
+		QRCode: "data:image/png;base64," + qrCodeBase64,
+	})
+}
+
+// VerifyMFA verifies MFA setup and enables it
+// @Summary      Verify MFA
+// @Description  Verify TOTP code and enable MFA
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body models.MFAVerifyRequest true "Verify Request"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/mfa/verify [post]
+func (h *AuthHandler) VerifyMFA(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req models.MFAVerifyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request: " + err.Error()})
+		return
+	}
+
+	mfa, err := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to get mfa secret", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	if mfa == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "MFA setup not initiated"})
+		return
+	}
+
+	// Decrypt secret
+	secretBytes, err := crypto.Decrypt(mfa.TOTPSecretEncrypted, h.encryptionKey)
+	if err != nil {
+		h.logger.Error("failed to decrypt secret", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Validate code
+	valid := totp.Validate(req.Code, string(secretBytes))
+	if !valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid code"})
+		_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionMFAFailed,
+			middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+		return
+	}
+
+	// Enable MFA
+	mfa.Enabled = true
+	if err := h.mfaRepo.Update(c.Request.Context(), mfa); err != nil {
+		h.logger.Error("failed to enable mfa", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionMFAVerified,
+		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionMFAEnabled,
+		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+
+	c.JSON(http.StatusOK, gin.H{"message": "MFA enabled successfully"})
+}
+
+// DisableMFA disables MFA
+// @Summary      Disable MFA
+// @Description  Disable MFA for the user
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/mfa/disable [post]
+func (h *AuthHandler) DisableMFA(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.mfaRepo.Delete(c.Request.Context(), userID); err != nil {
+		h.logger.Error("failed to disable mfa", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionMFADisabled,
+		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+
+	c.JSON(http.StatusOK, gin.H{"message": "MFA disabled successfully"})
 }

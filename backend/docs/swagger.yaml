@@ -1,8 +1,29 @@
 basePath: /api
 definitions:
+  models.MFASetupResponse:
+    properties:
+      backup_codes:
+        items:
+          type: string
+        type: array
+      qr_code:
+        description: Base64 encoded image
+        type: string
+      secret:
+        type: string
+    type: object
+  models.MFAVerifyRequest:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
   models.UserLoginRequest:
     properties:
       email:
+        type: string
+      mfa_code:
         type: string
       password:
         type: string
@@ -215,6 +236,100 @@ paths:
               type: string
             type: object
       summary: Get current user
+      tags:
+      - auth
+  /auth/mfa/disable:
+    post:
+      description: Disable MFA for the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Disable MFA
+      tags:
+      - auth
+  /auth/mfa/setup:
+    post:
+      description: Generate TOTP secret and QR code
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MFASetupResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Setup MFA
+      tags:
+      - auth
+  /auth/mfa/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify TOTP code and enable MFA
+      parameters:
+      - description: Verify Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.MFAVerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify MFA
       tags:
       - auth
   /auth/register:
