@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVault, getVaultEntries, createVaultEntry, updateVaultEntry, deleteVaultEntry } from '../../services/api/endpoints'
 import { deriveKey, encryptData, decryptData } from '../../utils/crypto'
-import { getMasterPassword, storeMasterPassword } from '../../utils/masterPassword'
+import { storeMasterPassword } from '../../utils/masterPassword'
 import VaultEntryModal from '../../components/VaultEntryModal'
 
 export default function VaultPage() {
@@ -55,48 +55,40 @@ export default function VaultPage() {
 
   // Unlock vault with master password
   async function handleUnlock(password) {
-    try {
-      const key = await deriveKey(password, vault.encryption_salt)
-      
-      // Verify password by attempting to decrypt at least one entry
-      // This is the Zero-Knowledge verification: decryption will fail if password is wrong
-      if (entries.length > 0) {
-        // If there are entries, try to decrypt the first one to verify password
+    const key = await deriveKey(password, vault.encryption_salt)
+    
+    // Verify password by attempting to decrypt at least one entry
+    // This is the Zero-Knowledge verification: decryption will fail if password is wrong
+    if (entries.length > 0) {
+      try {
+        await decryptData(entries[0].encrypted_data, entries[0].nonce, key)
+      } catch {
+        throw new Error('Falsches Master-Passwort. Die Entschlüsselung ist fehlgeschlagen.')
+      }
+    } else {
+      // Empty vault - verify password using the validation hash stored during creation
+      const validationData = localStorage.getItem(`vault_validation_${vaultId}`)
+      if (validationData) {
         try {
-          await decryptData(entries[0].encrypted_data, entries[0].nonce, key)
-          // Success - password is correct (AES-GCM verification passed)
+          const { hash, nonce } = JSON.parse(validationData)
+          await decryptData(hash, nonce, key)
         } catch {
-          throw new Error('Falsches Master-Passwort. Die Entschlüsselung ist fehlgeschlagen.')
+          throw new Error('Falsches Master-Passwort. Die Validierungsdaten konnten nicht entschlüsselt werden.')
         }
       } else {
-        // Empty vault - verify password using the validation hash stored during creation
-        const validationData = localStorage.getItem(`vault_validation_${vaultId}`)
-        if (validationData) {
-          try {
-            const { hash, nonce } = JSON.parse(validationData)
-            // Try to decrypt the validation hash with the derived key
-            await decryptData(hash, nonce, key)
-            // Success - password is correct
-          } catch {
-            throw new Error('Falsches Master-Passwort. Die Validierungsdaten konnten nicht entschlüsselt werden.')
-          }
-        } else {
-          // No validation hash found - might be an old vault created without this feature
-          console.warn('Vault is empty and no validation hash found - cannot verify password.')
-        }
+        // No validation hash found - might be an old vault created without this feature
+        console.warn('Vault is empty and no validation hash found - cannot verify password.')
       }
-      
-      // Password verification passed
-      setEncryptionKey(key)
-      storeMasterPassword(vaultId, password)
-      setShowMasterPasswordPrompt(false)
-      
-      // Decrypt all entries
-      if (entries.length > 0) {
-        await decryptAllEntries(entries, key)
-      }
-    } catch (err) {
-      throw err
+    }
+    
+    // Password verification passed
+    setEncryptionKey(key)
+    storeMasterPassword(vaultId, password)
+    setShowMasterPasswordPrompt(false)
+    
+    // Decrypt all entries
+    if (entries.length > 0) {
+      await decryptAllEntries(entries, key)
     }
   }
 

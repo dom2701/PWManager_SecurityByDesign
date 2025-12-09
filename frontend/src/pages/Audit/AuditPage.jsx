@@ -1,168 +1,160 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAuditLogs } from '../../services/api/endpoints'
 
-// Action icon mapping
-const actionIcons = {
-  'user.registered': '📝',
-  'user.login': '✅',
-  'user.logout': '👋',
-  'user.login_failed': '❌',
-  'mfa.setup': '🔐',
-  'mfa.enabled': '🛡️',
-  'mfa.disabled': '🔓',
-  'mfa.verified': '✔️',
-  'mfa.failed': '❌',
-  'vault.created': '🆕',
-  'vault.updated': '✏️',
-  'vault.deleted': '🗑️',
-  'vault.accessed': '👁️',
-  'entry.created': '🆕',
-  'entry.updated': '✏️',
-  'entry.deleted': '🗑️',
-  'entry.accessed': '👁️',
+// Statische Audit-Daten
+const auditLogs = [
+  {
+    id: 1,
+    timestamp: '2024-12-03 14:32:15',
+    user: 'max.mustermann',
+    action: 'CREATE',
+    type: 'PASSWORD',
+    target: 'Gmail Account',
+    vault: 'Persönlich',
+    details: 'Neues Passwort hinzugefügt',
+    ipAddress: '192.168.1.42',
+    severity: 'info'
+  },
+  {
+    id: 2,
+    timestamp: '2024-12-03 13:15:42',
+    user: 'max.mustermann',
+    action: 'UPDATE',
+    type: 'PASSWORD',
+    target: 'Netflix',
+    vault: 'Persönlich',
+    details: 'Passwort aktualisiert',
+    ipAddress: '192.168.1.42',
+    severity: 'info'
+  },
+  {
+    id: 3,
+    timestamp: '2024-12-03 11:28:03',
+    user: 'max.mustermann',
+    action: 'VIEW',
+    type: 'PASSWORD',
+    target: 'Sparkasse Online',
+    vault: 'Banking',
+    details: 'Passwort angezeigt',
+    ipAddress: '192.168.1.42',
+    severity: 'low'
+  },
+  {
+    id: 4,
+    timestamp: '2024-12-03 10:45:21',
+    user: 'max.mustermann',
+    action: 'DELETE',
+    type: 'PASSWORD',
+    target: 'Old Email Account',
+    vault: 'Persönlich',
+    details: 'Passwort gelöscht',
+    ipAddress: '192.168.1.42',
+    severity: 'warning'
+  },
+  {
+    id: 5,
+    timestamp: '2024-12-02 18:22:11',
+    user: 'max.mustermann',
+    action: 'CREATE',
+    type: 'VAULT',
+    target: 'Social Media',
+    vault: '-',
+    details: 'Neuer Vault erstellt',
+    ipAddress: '192.168.1.42',
+    severity: 'info'
+  },
+  {
+    id: 6,
+    timestamp: '2024-12-02 16:10:55',
+    user: 'max.mustermann',
+    action: 'LOGIN',
+    type: 'AUTH',
+    target: 'Benutzer-Login',
+    vault: '-',
+    details: 'Erfolgreicher Login',
+    ipAddress: '192.168.1.42',
+    severity: 'info'
+  },
+  {
+    id: 7,
+    timestamp: '2024-12-02 15:45:33',
+    user: 'unknown',
+    action: 'LOGIN_FAILED',
+    type: 'AUTH',
+    target: 'Benutzer-Login',
+    vault: '-',
+    details: 'Fehlgeschlagener Login-Versuch',
+    ipAddress: '203.0.113.45',
+    severity: 'critical'
+  },
+  {
+    id: 8,
+    timestamp: '2024-12-02 14:30:17',
+    user: 'max.mustermann',
+    action: 'UPDATE',
+    type: 'VAULT',
+    target: 'Arbeit',
+    vault: '-',
+    details: 'Vault-Beschreibung aktualisiert',
+    ipAddress: '192.168.1.42',
+    severity: 'info'
+  },
+  {
+    id: 9,
+    timestamp: '2024-12-02 12:15:08',
+    user: 'max.mustermann',
+    action: 'EXPORT',
+    type: 'PASSWORD',
+    target: 'Alle Passwörter',
+    vault: 'Persönlich',
+    details: 'Passwörter exportiert',
+    ipAddress: '192.168.1.42',
+    severity: 'warning'
+  },
+  {
+    id: 10,
+    timestamp: '2024-12-01 09:20:44',
+    user: 'max.mustermann',
+    action: 'CHANGE_PASSWORD',
+    type: 'AUTH',
+    target: 'Master-Passwort',
+    vault: '-',
+    details: 'Master-Passwort geändert',
+    ipAddress: '192.168.1.42',
+    severity: 'high'
+  },
+]
+
+const actionColors = {
+  CREATE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  UPDATE: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  DELETE: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  VIEW: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  LOGIN: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+  LOGIN_FAILED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  EXPORT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  CHANGE_PASSWORD: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
 }
 
-// Action label mapping (German)
-const actionLabels = {
-  'user.registered': 'Benutzer registriert',
-  'user.login': 'Anmeldung erfolgreich',
-  'user.logout': 'Abgemeldet',
-  'user.login_failed': 'Anmeldung fehlgeschlagen',
-  'mfa.setup': 'Zwei-Faktor-Auth eingerichtet',
-  'mfa.enabled': 'Zwei-Faktor-Auth aktiviert',
-  'mfa.disabled': 'Zwei-Faktor-Auth deaktiviert',
-  'mfa.verified': 'Zwei-Faktor-Auth verifiziert',
-  'mfa.failed': 'Zwei-Faktor-Auth fehlgeschlagen',
-  'vault.created': 'Vault erstellt',
-  'vault.updated': 'Vault aktualisiert',
-  'vault.deleted': 'Vault gelöscht',
-  'vault.accessed': 'Vault zugegriffen',
-  'entry.created': 'Eintrag erstellt',
-  'entry.updated': 'Eintrag aktualisiert',
-  'entry.deleted': 'Eintrag gelöscht',
-  'entry.accessed': 'Eintrag zugegriffen',
-}
-
-// Action category mapping
-const actionCategories = {
-  'user.registered': 'Authentifizierung',
-  'user.login': 'Authentifizierung',
-  'user.logout': 'Authentifizierung',
-  'user.login_failed': 'Authentifizierung',
-  'mfa.setup': 'Sicherheit',
-  'mfa.enabled': 'Sicherheit',
-  'mfa.disabled': 'Sicherheit',
-  'mfa.verified': 'Sicherheit',
-  'mfa.failed': 'Sicherheit',
-  'vault.created': 'Vault',
-  'vault.updated': 'Vault',
-  'vault.deleted': 'Vault',
-  'vault.accessed': 'Vault',
-  'entry.created': 'Eintrag',
-  'entry.updated': 'Eintrag',
-  'entry.deleted': 'Eintrag',
-  'entry.accessed': 'Eintrag',
-}
 
 export default function AuditPage() {
   const navigate = useNavigate()
-  const [logs, setLogs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [filter, setFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterAction, setFilterAction] = useState('ALL')
+  const [filterType, setFilterType] = useState('ALL')
 
-  useEffect(() => {
-    loadAuditLogs()
-  }, [])
+  const filteredLogs = auditLogs.filter(log => {
+    const matchesSearch = 
+      log.target.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.vault.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesAction = filterAction === 'ALL' || log.action === filterAction
+    const matchesType = filterType === 'ALL' || log.type === filterType
 
-  async function loadAuditLogs() {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await getAuditLogs()
-      console.log('Audit logs loaded:', data)
-      
-      // Handle different response formats
-      let auditLogs = []
-      if (Array.isArray(data)) {
-        auditLogs = data
-      } else if (data && data.logs && Array.isArray(data.logs)) {
-        auditLogs = data.logs
-      } else if (data && data.data && Array.isArray(data.data)) {
-        auditLogs = data.data
-      }
-      
-      setLogs(auditLogs)
-    } catch (err) {
-      console.error('Failed to load audit logs:', err)
-      // Show error but don't prevent UI from rendering
-      setError('Audit-Logs konnten nicht geladen werden. Die Seite wird möglicherweise später aktualisiert.')
-      setLogs([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Filter logs
-  const filteredLogs = logs.filter(log => {
-    const categoryMatch = filter === 'all' || actionCategories[log.action] === filter
-    const searchMatch = 
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (log.ip_address && log.ip_address.includes(searchTerm))
-    return categoryMatch && searchMatch
+    return matchesSearch && matchesAction && matchesType
   })
-
-  // Format timestamp
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleString('de-DE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  }
-
-  // Mask IP address for privacy
-  const maskIP = (ip) => {
-    if (!ip) return 'Unbekannt'
-    const parts = ip.split('.')
-    if (parts.length === 4) {
-      return `${parts[0]}.${parts[1]}.${parts[2]}.***`
-    }
-    return ip
-  }
-
-  // Extract details from log
-  const getDetailsLabel = (log) => {
-    try {
-      if (log.details) {
-        const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details
-        if (details.vault_name) return `${details.vault_name}`
-        if (details.entry_title) return `${details.entry_title}`
-      }
-    } catch (e) {
-      // Ignore parse errors
-    }
-    return ''
-  }
-
-  // Get severity badge color
-  const getSeverityColor = (action) => {
-    const severity = actionSeverity[action] || 'info'
-    const colors = {
-      info: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-      low: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
-      warning: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-      high: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
-    }
-    return colors[severity] || colors.info
-  }
-
-  const categories = ['all', 'Authentifizierung', 'Sicherheit', 'Vault', 'Eintrag']
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -179,20 +171,20 @@ export default function AuditPage() {
         </button>
         
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          🔍 Audit-Protokoll
+          Audit-Protokoll
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Alle wichtigen Aktionen und Sicherheitsereignisse in deinem Konto
+          Alle Aktivitäten und Änderungen im Überblick
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Gesamt Einträge</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{logs.length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{auditLogs.length}</p>
             </div>
             <div className="text-3xl">📊</div>
           </div>
@@ -200,12 +192,12 @@ export default function AuditPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Heute</p>
-              <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {logs.filter(l => new Date(l.timestamp).toDateString() === new Date().toDateString()).length}
+              <p className="text-sm text-gray-600 dark:text-gray-400">Kritisch</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {auditLogs.filter(l => l.severity === 'critical').length}
               </p>
             </div>
-            <div className="text-3xl">📅</div>
+            <div className="text-3xl">🔴</div>
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
@@ -213,147 +205,147 @@ export default function AuditPage() {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Warnungen</p>
               <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {logs.filter(l => ['user.login_failed', 'mfa.failed', 'vault.deleted', 'entry.deleted'].includes(l.action)).length}
+                {auditLogs.filter(l => l.severity === 'warning' || l.severity === 'high').length}
               </p>
             </div>
             <div className="text-3xl">⚠️</div>
           </div>
         </div>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Filter nach Kategorie
-          </label>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat === 'all' ? 'Alle Kategorien' : cat}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Suchen
-          </label>
-          <input
-            type="text"
-            placeholder="Nach Aktion oder IP suchen..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="flex items-end">
-          <button
-            onClick={loadAuditLogs}
-            className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
-          >
-            Aktualisieren
-          </button>
-        </div>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Logs List */}
-      {!loading && !error && (
-        <div className="space-y-3">
-          {filteredLogs.length > 0 ? (
-            filteredLogs.map((log) => (
-              <div
-                key={log.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">{actionIcons[log.action] || '📋'}</span>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {actionLabels[log.action] || log.action}
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {formatTime(log.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="ml-11 text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                      {getDetailsLabel(log) && (
-                        <p>📌 {getDetailsLabel(log)}</p>
-                      )}
-                      <p className="text-xs">
-                        🌐 IP: {maskIP(log.ip_address)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Category Badge */}
-                  <div className="ml-4">
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getSeverityColor(log.action)}`}>
-                      {actionCategories[log.action] || 'Sonstiges'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="text-6xl mb-4">📭</div>
-              <p className="text-gray-600 dark:text-gray-400">
-                {filter === 'all' ? 'Keine Audit-Logs vorhanden' : 'Keine Logs für diese Kategorie'}
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Heute</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {auditLogs.filter(l => l.timestamp.startsWith('2024-12-03')).length}
               </p>
             </div>
-          )}
+            <div className="text-3xl">📅</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Suchen..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
+          {/* Action Filter */}
+          <select
+            value={filterAction}
+            onChange={(e) => setFilterAction(e.target.value)}
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="ALL">Alle Aktionen</option>
+            <option value="CREATE">Erstellt</option>
+            <option value="UPDATE">Aktualisiert</option>
+            <option value="DELETE">Gelöscht</option>
+            <option value="VIEW">Angesehen</option>
+            <option value="LOGIN">Login</option>
+            <option value="LOGIN_FAILED">Fehlgeschlagener Login</option>
+            <option value="EXPORT">Exportiert</option>
+            <option value="CHANGE_PASSWORD">Passwort geändert</option>
+          </select>
+
+          {/* Type Filter */}
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="ALL">Alle Typen</option>
+            <option value="PASSWORD">Passwort</option>
+            <option value="VAULT">Vault</option>
+            <option value="AUTH">Authentifizierung</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Audit Log Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Zeitstempel
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Benutzer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Aktion
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Ziel
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Vault
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Details
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredLogs.map((log) => (
+                <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {log.timestamp}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {log.user}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${actionColors[log.action]}`}>
+                      {log.action}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {log.target}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {log.vault}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {log.details}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {filteredLogs.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="text-6xl mb-4">🔍</div>
+          <p className="text-gray-600 dark:text-gray-400">Keine Audit-Einträge gefunden</p>
         </div>
       )}
 
-      {/* Stats Summary */}
-      {!loading && !error && logs.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Einträge angezeigt</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{filteredLogs.length}</p>
-            </div>
-            {Object.entries(
-              logs.reduce((acc, log) => {
-                const cat = actionCategories[log.action] || 'Sonstiges'
-                acc[cat] = (acc[cat] || 0) + 1
-                return acc
-              }, {})
-            ).map(([cat, count]) => (
-              <div key={cat} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-600 dark:text-gray-400">{cat}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{count}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Summary */}
+      <div className="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+          📊 {filteredLogs.length} von {auditLogs.length} Einträgen angezeigt
+        </p>
+      </div>
     </div>
   )
 }
