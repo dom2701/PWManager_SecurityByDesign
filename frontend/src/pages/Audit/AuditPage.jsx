@@ -158,11 +158,17 @@ export default function AuditPage() {
     setLoading(true)
     setError(null)
     try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      // Create a timeout that rejects after 10 seconds
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      )
       
-      const data = await getAuditLogs({ limit: 500, signal: controller.signal })
-      clearTimeout(timeout)
+      // Race between the API call and the timeout
+      const data = await Promise.race([
+        getAuditLogs({ limit: 500 }),
+        timeoutPromise
+      ])
+      
       setAuditLogs(Array.isArray(data) ? data : fallbackAuditLogs)
     } catch (err) {
       console.error('Failed to load audit logs, using fallback:', err)
