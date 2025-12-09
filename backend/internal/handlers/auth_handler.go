@@ -218,9 +218,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	_ = h.auditRepo.Create(c.Request.Context(), &user.ID, models.ActionUserLogin,
 		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
 
+	userResp := user.ToResponse()
+	if mfa != nil {
+		userResp.MFAEnabled = mfa.Enabled
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "login successful",
-		"user":    user.ToResponse(),
+		"user":    userResp,
 	})
 }
 
@@ -286,7 +291,19 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.ToResponse())
+	mfa, err := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to get mfa status", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	resp := user.ToResponse()
+	if mfa != nil {
+		resp.MFAEnabled = mfa.Enabled
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // SetupMFA initiates MFA setup

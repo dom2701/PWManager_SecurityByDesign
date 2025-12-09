@@ -65,7 +65,7 @@ services:
 
       # Security - CHANGE THESE IN PRODUCTION!
       SESSION_SECRET: dev_session_secret_please_change_in_production_min_32_chars
-      MASTER_ENCRYPTION_KEY: dev_master_key_please_change_in_production_min_32_chars
+      MASTER_ENCRYPTION_KEY: a0a3eea5b63f3c0b347c553b2185f38e
 
       # Session Configuration
       SESSION_MAX_AGE: 3600

@@ -30,16 +30,18 @@ type UserLoginRequest struct {
 
 // UserResponse represents the user response (without sensitive data)
 type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         uuid.UUID `json:"id"`
+	Email      string    `json:"email"`
+	CreatedAt  time.Time `json:"created_at"`
+	MFAEnabled bool      `json:"mfa_enabled"`
 }
 
 // ToResponse converts User to UserResponse
 func (u *User) ToResponse() UserResponse {
 	return UserResponse{
-		ID:        u.ID,
-		Email:     u.Email,
-		CreatedAt: u.CreatedAt,
+		ID:         u.ID,
+		Email:      u.Email,
+		CreatedAt:  u.CreatedAt,
+		MFAEnabled: false,
 	}
 }

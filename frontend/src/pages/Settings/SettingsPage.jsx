@@ -29,6 +29,7 @@ export default function SettingsPage() {
     try {
       const userData = await getCurrentUser()
       setProfile(userData)
+      setMfaEnabled(Boolean(userData?.mfa_enabled))
     } catch (err) {
       console.error('Failed to load user profile:', err)
       setError('Fehler beim Laden des Profils')
@@ -95,14 +96,14 @@ export default function SettingsPage() {
 
   const handleMFASuccess = () => {
     setSuccess('MFA erfolgreich aktiviert!')
-    setMfaEnabled(true)
     setShowMFASetupModal(false)
+    loadProfile()
   }
 
   const handleMFADisableSuccess = () => {
     setSuccess('MFA erfolgreich deaktiviert!')
-    setMfaEnabled(false)
     setShowMFADisableModal(false)
+    loadProfile()
   }
 
   return (
