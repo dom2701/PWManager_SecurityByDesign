@@ -106,6 +106,7 @@ func main() {
 	vaultRepo := repository.NewVaultRepository(db)
 	entryRepo := repository.NewEntryRepository(db)
 	auditRepo := repository.NewAuditRepository(db)
+	mfaRepo := repository.NewMFARepository(db)
 
 	// Initialize session manager
 	sessionManager := auth.NewSessionManager(
@@ -124,8 +125,8 @@ func main() {
 	}
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(userRepo, auditRepo, sessionManager, argon2Params, logger)
-	vaultHandler := handlers.NewVaultHandler(vaultRepo, entryRepo, auditRepo, logger)
+	authHandler := handlers.NewAuthHandler(userRepo, mfaRepo, auditRepo, sessionManager, argon2Params, cfg.Security.MasterEncryptionKey, logger)
+	vaultHandler := handlers.NewVaultHandler(vaultRepo, auditRepo, logger)
 	entryHandler := handlers.NewEntryHandler(entryRepo, vaultRepo, auditRepo, logger)
 	auditHandler := handlers.NewAuditHandler(auditRepo, logger)
 
@@ -156,6 +157,11 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/logout", middleware.AuthMiddleware(sessionManager), authHandler.Logout)
 			auth.GET("/me", middleware.AuthMiddleware(sessionManager), authHandler.Me)
+
+			// MFA routes (protected)
+			auth.POST("/mfa/setup", middleware.AuthMiddleware(sessionManager), authHandler.SetupMFA)
+			auth.POST("/mfa/verify", middleware.AuthMiddleware(sessionManager), authHandler.VerifyMFA)
+			auth.POST("/mfa/disable", middleware.AuthMiddleware(sessionManager), authHandler.DisableMFA)
 		}
 
 		// Protected routes
