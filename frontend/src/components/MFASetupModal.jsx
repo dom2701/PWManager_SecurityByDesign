@@ -62,6 +62,7 @@ export const MFASetupModal = ({ isOpen, onClose, onSuccess }) => {
     setCode('')
     setStep('init')
     setBackupCodesVisible(false)
+    initializedRef.current = false
     clearError()
     onClose()
   }
