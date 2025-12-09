@@ -14,7 +14,7 @@ type AuditLog struct {
 	Action    string          `json:"action" db:"action"`
 	IPAddress string          `json:"ip_address" db:"ip_address"`
 	UserAgent string          `json:"user_agent" db:"user_agent"`
-	Details   json.RawMessage `json:"details,omitempty" db:"details"`
+	Details   json.RawMessage `json:"details,omitempty" db:"details" swaggertype:"string"`
 	Timestamp time.Time       `json:"timestamp" db:"timestamp"`
 }
 

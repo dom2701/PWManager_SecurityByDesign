@@ -535,3 +535,71 @@ func generateBackupCodes(n int) ([]string, error) {
 
 	return codes, nil
 }
+
+// ChangePassword handles password change for logged-in users
+// @Summary      Change password
+// @Description  Change password for the currently logged-in user
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body models.ChangePasswordRequest true "Change Password Request"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /auth/change-password [post]
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req models.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	// Get user to verify current password
+	user, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to get user", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Verify current password
+	valid, err := crypto.VerifyPassword(req.CurrentPassword, user.PasswordHash)
+	if err != nil {
+		h.logger.Error("failed to verify password", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if !valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid current password"})
+		return
+	}
+
+	// Hash new password
+	passwordHash, err := crypto.HashPassword(req.NewPassword, h.argon2Params)
+	if err != nil {
+		h.logger.Error("failed to hash password", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Update password
+	if err := h.userRepo.UpdatePassword(c.Request.Context(), userID, passwordHash); err != nil {
+		h.logger.Error("failed to update password", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, "user.password_changed",
+		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}

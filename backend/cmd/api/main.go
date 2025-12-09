@@ -156,6 +156,7 @@ func main() {
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/logout", middleware.AuthMiddleware(sessionManager), authHandler.Logout)
+			auth.POST("/change-password", middleware.AuthMiddleware(sessionManager), authHandler.ChangePassword)
 			auth.GET("/me", middleware.AuthMiddleware(sessionManager), authHandler.Me)
 
 			// MFA routes (protected)
