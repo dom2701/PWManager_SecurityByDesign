@@ -108,9 +108,12 @@ export default function AuditPage() {
       <div className="mb-8">
         <button
           onClick={() => navigate('/dashboard')}
-          className="mb-4 px-4 py-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 flex items-center gap-2"
+          className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 rounded-lg font-medium transition-colors mb-4"
         >
-          <span>←</span> Zurück
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Zurück zum Dashboard
         </button>
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Audit-Protokoll
