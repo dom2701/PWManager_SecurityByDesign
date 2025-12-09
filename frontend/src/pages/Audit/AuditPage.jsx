@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAuditLogs, getAuditLogDetails } from '../../services/api/endpoints'
+// import { getAuditLogs, getAuditLogDetails } from '../../services/api/endpoints'
 
 // Fallback Audit-Daten falls API nicht verfügbar
 const fallbackAuditLogs = [
@@ -143,47 +143,24 @@ export default function AuditPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAction, setFilterAction] = useState('ALL')
   const [filterType, setFilterType] = useState('ALL')
-  const [auditLogs, setAuditLogs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [auditLogs, setAuditLogs] = useState(fallbackAuditLogs)
+  const [loading, setLoading] = useState(false)
   const [selectedLogDetails, setSelectedLogDetails] = useState(null)
   const [detailsLoading, setDetailsLoading] = useState(false)
 
   // Load audit logs on mount
   useEffect(() => {
-    loadAuditLogs()
+    // Immediately show fallback data for debugging
+    setAuditLogs(fallbackAuditLogs)
+    setLoading(false)
   }, [])
-
-  async function loadAuditLogs() {
-    setLoading(true)
-    setError(null)
-    try {
-      // Create a timeout that rejects after 10 seconds
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
-      )
-      
-      // Race between the API call and the timeout
-      const data = await Promise.race([
-        getAuditLogs({ limit: 500 }),
-        timeoutPromise
-      ])
-      
-      setAuditLogs(Array.isArray(data) ? data : fallbackAuditLogs)
-    } catch (err) {
-      console.error('Failed to load audit logs, using fallback:', err)
-      // Use fallback data if API fails
-      setAuditLogs(fallbackAuditLogs)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function handleViewDetails(logId) {
     setDetailsLoading(true)
     try {
-      const details = await getAuditLogDetails(logId)
-      setSelectedLogDetails(details)
+      // For now, just show the log itself as details
+      const details = auditLogs.find(log => log.id === logId)
+      setSelectedLogDetails(details || {})
     } catch (err) {
       console.error('Failed to load log details:', err)
     } finally {
@@ -242,13 +219,6 @@ export default function AuditPage() {
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg">
-          {error}
         </div>
       )}
 
