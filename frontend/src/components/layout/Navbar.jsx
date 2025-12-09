@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react'
 import ThemeToggle from '../ui/ThemeToggle'
-import CountdownTimer from '../ui/CountdownTimer'
 import { clearSession } from '../../hooks/useSession'
-import { handleLogout } from '../../handlers/authHandlers'
+import { logoutUser } from '../../services/auth'
+import { useAutoLogoutContext } from '../../context/AutoLogoutContext'
 
 export default function Navbar() {
+  const { remainingSeconds } = useAutoLogoutContext()
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
   return (
     <header className="antialiased">
       <nav className="bg-white border-b border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
@@ -18,9 +26,11 @@ export default function Navbar() {
           </div>
           
           {/* Right side */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 tabular-nums">
+              🕒 Auto-Logout: {formatTime(remainingSeconds)}
+            </span>
             <ThemeToggle />
-            <CountdownTimer initialSeconds={15 * 60} onExpire={() => console.log('Logout!')} />
             <UserDropdown />
           </div>
         </div>
@@ -31,6 +41,7 @@ export default function Navbar() {
 
     function UserDropdown() {
       const [open, setOpen] = useState(false)
+      const [loggingOut, setLoggingOut] = useState(false)
       const ref = useRef(null)
 
       useEffect(() => {
@@ -40,6 +51,20 @@ export default function Navbar() {
         document.addEventListener('mousedown', handleClick)
         return () => document.removeEventListener('mousedown', handleClick)
       }, [])
+
+      async function handleLogout() {
+        setLoggingOut(true)
+        try {
+          // Call backend logout endpoint
+          await logoutUser()
+        } catch (err) {
+          console.warn('Logout error:', err)
+        } finally {
+          // Clear session and redirect regardless of backend response
+          clearSession()
+          window.location.href = '/login'
+        }
+      }
 
       return (
         <div className="relative" ref={ref}>
@@ -57,7 +82,14 @@ export default function Navbar() {
               <div className="py-1" role="menu" aria-orientation="vertical">
                 <a href="/profile" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Profil bearbeiten</a>
                 <a href="/audits" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Audits</a>
-                <button onClick={() => { setOpen(false); try { handleLogout() } catch (e) { console.warn(e) } clearSession(); window.location.href = '/login' }} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors" role="menuitem">Logout</button>
+                <button 
+                  onClick={() => { setOpen(false); handleLogout() }} 
+                  disabled={loggingOut}
+                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 dark:text-gray-100 dark:hover:bg-indigo-900/30 transition-colors disabled:opacity-60" 
+                  role="menuitem"
+                >
+                  {loggingOut ? 'Wird abgemeldet...' : 'Logout'}
+                </button>
               </div>
             </div>
           )}

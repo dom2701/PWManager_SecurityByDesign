@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getCurrentUser, changePassword } from '../../services/auth'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -11,14 +12,25 @@ export default function SettingsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [profile, setProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
-  // User profile data (static)
-  const [profile] = useState({
-    username: 'max.mustermann',
-    email: 'max@gmail.com',
-    createdAt: '2024-01-15',
-    lastLogin: '2024-12-03 14:30'
-  })
+  useEffect(() => {
+    loadProfile()
+  }, [])
+
+  async function loadProfile() {
+    setProfileLoading(true)
+    try {
+      const userData = await getCurrentUser()
+      setProfile(userData)
+    } catch (err) {
+      console.error('Failed to load user profile:', err)
+      setError('Fehler beim Laden des Profils')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
 
   const handlePasswordChangeRequest = (e) => {
     e.preventDefault()
@@ -56,12 +68,7 @@ export default function SettingsPage() {
     setError('')
 
     try {
-      // Hier würde normalerweise der API-Call erfolgen
-      // await handlePasswortChange(newPassword)
-      
-      // Simuliere API-Call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
+      await changePassword(currentPassword, newPassword)
       setSuccess('Master-Passwort erfolgreich geändert!')
       setCurrentPassword('')
       setNewPassword('')
@@ -69,7 +76,7 @@ export default function SettingsPage() {
       setShowConfirmModal(false)
       setConfirmText('')
     } catch (err) {
-      setError('Fehler beim Ändern des Passworts: ' + err.message)
+      setError(err?.data?.error || err?.message || 'Fehler beim Ändern des Passworts')
     } finally {
       setLoading(false)
     }
@@ -102,74 +109,58 @@ export default function SettingsPage() {
           Verwalte deine Kontoinformationen und Sicherheitseinstellungen
         </p>
       </div>
-
       {/* Profile Info Card */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Profilinformationen
         </h2>
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-              <img 
-                src="https://png.pngtree.com/png-clipart/20210915/ourmid/pngtree-avatar-icon-abstract-user-login-icon-png-image_3917181.jpg" 
-                alt="Profile" 
-                className="w-20 h-20 rounded-full object-cover"
-              />
-            </div>
-            <div>
-              <p className="text-lg font-medium text-gray-900 dark:text-white">{profile.username}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{profile.email}</p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Benutzername
-              </label>
-              <input
-                type="text"
-                value={profile.username}
-                readOnly
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
-              />
+        {profileLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : profile ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-4xl">
+                👤
+              </div>
+              <div>
+                <p className="text-lg font-medium text-gray-900 dark:text-white">{profile.email?.split('@')[0] || profile.username}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{profile.email}</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                E-Mail
-              </label>
-              <input
-                type="email"
-                value={profile.email}
-                readOnly
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Erstellt am
-              </label>
-              <input
-                type="text"
-                value={profile.createdAt}
-                readOnly
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Letzter Login
-              </label>
-              <input
-                type="text"
-                value={profile.lastLogin}
-                readOnly
-                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Benutzername
+                </label>
+                <input
+                  type="text"
+                  value={profile.email?.split('@')[0] || profile.username || ''}
+                  readOnly
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  E-Mail
+                </label>
+                <input
+                  type="email"
+                  value={profile.email || ''}
+                  readOnly
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white cursor-not-allowed"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+            Profil konnte nicht geladen werden
+          </div>
+        )}
       </div>
 
       {/* Password Change Card */}

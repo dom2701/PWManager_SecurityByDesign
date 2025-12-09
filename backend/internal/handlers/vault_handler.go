@@ -15,6 +15,7 @@ import (
 // VaultHandler handles vault-related requests
 type VaultHandler struct {
 	vaultRepo *repository.VaultRepository
+	entryRepo *repository.EntryRepository
 	auditRepo *repository.AuditRepository
 	logger    *zap.Logger
 }
@@ -22,11 +23,13 @@ type VaultHandler struct {
 // NewVaultHandler creates a new vault handler
 func NewVaultHandler(
 	vaultRepo *repository.VaultRepository,
+	entryRepo *repository.EntryRepository,
 	auditRepo *repository.AuditRepository,
 	logger *zap.Logger,
 ) *VaultHandler {
 	return &VaultHandler{
 		vaultRepo: vaultRepo,
+		entryRepo: entryRepo,
 		auditRepo: auditRepo,
 		logger:    logger,
 	}
@@ -84,6 +87,7 @@ func (h *VaultHandler) Create(c *gin.Context) {
 		UserID:         vault.UserID,
 		Name:           vault.Name,
 		EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+		EntriesCount:   0, // New vault has no entries
 		CreatedAt:      vault.CreatedAt,
 		UpdatedAt:      vault.UpdatedAt,
 	})
@@ -115,11 +119,19 @@ func (h *VaultHandler) List(c *gin.Context) {
 	// Convert to response format
 	responses := make([]models.VaultResponse, len(vaults))
 	for i, vault := range vaults {
+		// Count entries for this vault
+		entryCount, err := h.entryRepo.CountByVaultID(c.Request.Context(), vault.ID)
+		if err != nil {
+			h.logger.Error("failed to count entries", zap.Error(err))
+			entryCount = 0
+		}
+
 		responses[i] = models.VaultResponse{
 			ID:             vault.ID,
 			UserID:         vault.UserID,
 			Name:           vault.Name,
 			EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+			EntriesCount:   entryCount,
 			CreatedAt:      vault.CreatedAt,
 			UpdatedAt:      vault.UpdatedAt,
 		}
@@ -173,11 +185,19 @@ func (h *VaultHandler) Get(c *gin.Context) {
 		return
 	}
 
+	// Count entries for this vault
+	entryCount, err := h.entryRepo.CountByVaultID(c.Request.Context(), vaultID)
+	if err != nil {
+		h.logger.Error("failed to count entries", zap.Error(err))
+		entryCount = 0
+	}
+
 	c.JSON(http.StatusOK, models.VaultResponse{
 		ID:             vault.ID,
 		UserID:         vault.UserID,
 		Name:           vault.Name,
 		EncryptionSalt: hex.EncodeToString(vault.EncryptionSalt),
+		EntriesCount:   entryCount,
 		CreatedAt:      vault.CreatedAt,
 		UpdatedAt:      vault.UpdatedAt,
 	})
