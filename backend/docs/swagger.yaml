@@ -1,5 +1,34 @@
 basePath: /api
 definitions:
+  models.AuditLog:
+    properties:
+      action:
+        type: string
+      details:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      timestamp:
+        type: string
+      user_agent:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        maxLength: 128
+        minLength: 12
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
   models.MFASetupResponse:
     properties:
       backup_codes:
@@ -51,6 +80,8 @@ definitions:
         type: string
       id:
         type: string
+      mfa_enabled:
+        type: boolean
     type: object
   models.VaultCreateRequest:
     properties:
@@ -113,6 +144,9 @@ definitions:
       encryption_salt:
         description: Hex-encoded
         type: string
+      entries_count:
+        description: Number of entries in vault
+        type: integer
       id:
         type: string
       name:
@@ -145,6 +179,125 @@ info:
   title: Password Manager API
   version: "1.0"
 paths:
+  /audit/logs:
+    get:
+      description: Get audit logs for the authenticated user
+      parameters:
+      - description: Number of logs to return
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Sort order
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.AuditLog'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List audit logs
+      tags:
+      - audit
+  /audit/logs/{id}:
+    get:
+      description: Get a single audit log by ID for the authenticated user
+      parameters:
+      - description: Audit log ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuditLog'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get audit log
+      tags:
+      - audit
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change password for the currently logged-in user
+      parameters:
+      - description: Change Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Change password
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:

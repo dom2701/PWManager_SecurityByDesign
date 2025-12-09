@@ -28,6 +28,12 @@ type UserLoginRequest struct {
 	MFACode  string `json:"mfa_code,omitempty"`
 }
 
+// ChangePasswordRequest represents the change password request payload
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=12,max=128"`
+}
+
 // UserResponse represents the user response (without sensitive data)
 type UserResponse struct {
 	ID         uuid.UUID `json:"id"`
