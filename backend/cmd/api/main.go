@@ -125,8 +125,9 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, auditRepo, sessionManager, argon2Params, logger)
-	vaultHandler := handlers.NewVaultHandler(vaultRepo, auditRepo, logger)
+	vaultHandler := handlers.NewVaultHandler(vaultRepo, entryRepo, auditRepo, logger)
 	entryHandler := handlers.NewEntryHandler(entryRepo, vaultRepo, auditRepo, logger)
+	auditHandler := handlers.NewAuditHandler(auditRepo, logger)
 
 	// Setup Gin
 	gin.SetMode(cfg.Server.GinMode)
@@ -181,6 +182,13 @@ func main() {
 				entries.GET("/:id", entryHandler.Get)
 				entries.PUT("/:id", entryHandler.Update)
 				entries.DELETE("/:id", entryHandler.Delete)
+			}
+
+			// Audit routes
+			audit := protected.Group("/audit")
+			{
+				audit.GET("/logs", auditHandler.List)
+				audit.GET("/logs/:id", auditHandler.Get)
 			}
 		}
 	}

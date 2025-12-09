@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getAuditLogs, getAuditLogDetails } from '../../services/api/endpoints'
 
-// Statische Audit-Daten
-const auditLogs = [
+// Fallback Audit-Daten falls API nicht verfügbar
+const fallbackAuditLogs = [
   {
     id: 1,
     timestamp: '2024-12-03 14:32:15',
@@ -142,6 +143,47 @@ export default function AuditPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterAction, setFilterAction] = useState('ALL')
   const [filterType, setFilterType] = useState('ALL')
+  const [auditLogs, setAuditLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedLogDetails, setSelectedLogDetails] = useState(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+
+  // Load audit logs on mount
+  useEffect(() => {
+    loadAuditLogs()
+  }, [])
+
+  async function loadAuditLogs() {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await getAuditLogs({ limit: 500 })
+      setAuditLogs(Array.isArray(data) ? data : fallbackAuditLogs)
+    } catch (err) {
+      console.error('Failed to load audit logs, using fallback:', err)
+      // Use fallback data if API fails
+      setAuditLogs(fallbackAuditLogs)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleViewDetails(logId) {
+    setDetailsLoading(true)
+    try {
+      const details = await getAuditLogDetails(logId)
+      setSelectedLogDetails(details)
+    } catch (err) {
+      console.error('Failed to load log details:', err)
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
+
+  function closeDetails() {
+    setSelectedLogDetails(null)
+  }
 
   const filteredLogs = auditLogs.filter(log => {
     const matchesSearch = 
@@ -178,7 +220,22 @@ export default function AuditPage() {
         </p>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg">
+          {error}
+        </div>
+      )}
+
       {/* Stats Cards */}
+      {!loading && (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -223,6 +280,7 @@ export default function AuditPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -323,8 +381,13 @@ export default function AuditPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {log.vault}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {log.details}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleViewDetails(log.id)}
+                      className="px-3 py-1 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                    >
+                      Details
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -346,6 +409,94 @@ export default function AuditPage() {
           📊 {filteredLogs.length} von {auditLogs.length} Einträgen angezeigt
         </p>
       </div>
+
+      {/* Details Modal */}
+      {selectedLogDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Audit-Eintrag Details
+              </h2>
+              <button
+                onClick={closeDetails}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {detailsLoading && (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+              </div>
+            )}
+
+            {!detailsLoading && selectedLogDetails && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Zeitstempel</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.timestamp}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Benutzer</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.user}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Aktion</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.action}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Ziel</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.target}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Vault</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.vault}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Schweregrad</p>
+                    <p className="text-gray-900 dark:text-white font-medium">
+                      {selectedLogDetails.severity || 'info'}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Details</p>
+                  <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-auto max-h-40">
+                    <pre className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words font-mono">
+                      {JSON.stringify(selectedLogDetails.details || {}, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end mt-6">
+                  <button
+                    onClick={closeDetails}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Schließen
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

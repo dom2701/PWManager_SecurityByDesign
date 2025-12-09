@@ -96,3 +96,24 @@ func (r *AuditRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (
 
 	return count, nil
 }
+
+// GetByID retrieves a single audit log by ID
+func (r *AuditRepository) GetByID(ctx context.Context, logID string) (*models.AuditLog, error) {
+	log := &models.AuditLog{}
+
+	query := `
+		SELECT id, user_id, action, ip_address, user_agent, details, timestamp
+		FROM audit_logs
+		WHERE id = $1
+	`
+
+	err := r.db.GetContext(ctx, log, query, logID)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get audit log: %w", err)
+	}
+
+	return log, nil
+}
