@@ -34,7 +34,15 @@ export const MFASetupModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       await confirmMFA(code)
-      setStep('backup')
+
+      const hasBackup = Array.isArray(mfaSetupData?.backup_codes) && mfaSetupData.backup_codes.length > 0
+
+      if (hasBackup) {
+        setStep('backup')
+      } else {
+        onSuccess?.()
+        handleClose()
+      }
     } catch (err) {
       console.error('Code verification failed:', err)
       setCode('')
@@ -96,7 +104,7 @@ export const MFASetupModal = ({ isOpen, onClose, onSuccess }) => {
             {mfaSetupData.qr_code && (
               <div className="mb-6 flex justify-center">
                 <img
-                  src={`data:image/png;base64,${mfaSetupData.qr_code}`}
+                  src={mfaSetupData.qr_code.startsWith('data:image') ? mfaSetupData.qr_code : `data:image/png;base64,${mfaSetupData.qr_code}`}
                   alt="MFA QR Code"
                   className="w-48 h-48"
                 />

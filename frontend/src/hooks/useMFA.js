@@ -27,7 +27,6 @@ export const useMFA = () => {
       setLoading(true)
       setError(null)
       const response = await verifyMFA(code)
-      setMfaSetupData(null)
       return response
     } catch (err) {
       const errorMessage = err?.data?.error || err?.message || 'MFA verification failed'
