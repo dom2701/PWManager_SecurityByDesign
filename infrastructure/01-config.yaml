@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pwmanager-config
+  namespace: pwmanager
+data:
+  POSTGRES_USER: "pwmanager_user"
+  POSTGRES_DB: "pwmanager"
+  REDIS_URL: "redis://redis.pwmanager.svc.cluster.local:6379/0"
+  VITE_API_URL: "http://backend.pwmanager.svc.cluster.local:8080" # For frontend if needed server-side or build-time
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pwmanager-secrets
+  namespace: pwmanager
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "secure_password_change_me"
+  SESSION_SECRET: "e739193437bcbd9b4a404df30fe38024c1d74629cb7e4248238c30cf9e1a2dfb"
+  MASTER_ENCRYPTION_KEY: "b5d0fe44692523ad87daca72d3478903"
+  DATABASE_URL: "postgres://pwmanager_user:secure_password_change_me@postgres.pwmanager.svc.cluster.local:5432/pwmanager?sslmode=disable"
