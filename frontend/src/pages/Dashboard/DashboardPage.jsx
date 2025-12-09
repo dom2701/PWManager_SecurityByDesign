@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getVaults, createVault, deleteVault } from '../../services/api/endpoints'
+import { getVaults, createVault, deleteVault, updateVault } from '../../services/api/endpoints'
 import { getCurrentUser } from '../../services/auth'
 import CreateVaultModal from '../../components/CreateVaultModal'
 import { storeMasterPassword } from '../../utils/masterPassword'
@@ -13,6 +13,10 @@ export default function DashboardPage() {
   const [error, setError] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
+  const [renameVaultId, setRenameVaultId] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [renameError, setRenameError] = useState('')
+  const [renameLoading, setRenameLoading] = useState(false)
 
   // Load vaults and current user from backend
   useEffect(() => {
@@ -87,6 +91,46 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Failed to delete vault:', err)
       setError(err?.data?.error || err?.message || 'Fehler beim Löschen des Vaults')
+    }
+  }
+
+  function openRenameModal(vaultId, currentName) {
+    setRenameVaultId(vaultId)
+    setRenameValue(currentName)
+    setRenameError('')
+  }
+
+  function closeRenameModal() {
+    setRenameVaultId(null)
+    setRenameValue('')
+    setRenameError('')
+  }
+
+  async function handleRenameSubmit(e) {
+    e.preventDefault()
+    
+    if (!renameValue.trim()) {
+      setRenameError('Vault-Name darf nicht leer sein')
+      return
+    }
+
+    if (renameValue.trim().length > 255) {
+      setRenameError('Vault-Name darf maximal 255 Zeichen lang sein')
+      return
+    }
+
+    setRenameLoading(true)
+    setRenameError('')
+
+    try {
+      await updateVault(renameVaultId, { name: renameValue.trim() })
+      await loadVaults()
+      closeRenameModal()
+    } catch (err) {
+      console.error('Failed to rename vault:', err)
+      setRenameError(err?.data?.error || err?.message || 'Fehler beim Umbenennen des Vaults')
+    } finally {
+      setRenameLoading(false)
     }
   }
 
@@ -209,29 +253,53 @@ export default function DashboardPage() {
               key={vault.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 transition-all hover:shadow-lg hover:border-indigo-500 dark:hover:border-indigo-400 relative group"
             >
-              {/* Delete Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteVault(vault.id, vault.name)
-                }}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
-                title="Vault löschen"
-              >
-                <svg
-                  className="h-5 w-5 text-red-600 dark:text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {/* Action Buttons */}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    openRenameModal(vault.id, vault.name)
+                  }}
+                  className="p-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg"
+                  title="Vault umbenennen"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteVault(vault.id, vault.name)
+                  }}
+                  className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                  title="Vault löschen"
+                >
+                  <svg
+                    className="h-5 w-5 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
 
               {/* Vault Content - clickable */}
               <div
@@ -294,6 +362,70 @@ export default function DashboardPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateVault}
       />
+
+      {/* Rename Vault Modal */}
+      {renameVaultId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Vault umbenennen
+              </h2>
+            </div>
+
+            <form onSubmit={handleRenameSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Neuer Name
+                </label>
+                <input
+                  type="text"
+                  value={renameValue}
+                  onChange={(e) => {
+                    setRenameValue(e.target.value)
+                    setRenameError('')
+                  }}
+                  placeholder="Vault-Name eingeben..."
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={renameLoading}
+                  autoFocus
+                />
+              </div>
+
+              {renameError && (
+                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                  {renameError}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeRenameModal}
+                  disabled={renameLoading}
+                  className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  disabled={renameLoading}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {renameLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Wird gespeichert...
+                    </>
+                  ) : (
+                    'Speichern'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
