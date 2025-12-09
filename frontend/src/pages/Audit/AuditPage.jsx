@@ -65,27 +65,6 @@ const actionCategories = {
   'entry.accessed': 'Eintrag',
 }
 
-// Severity mapping
-const actionSeverity = {
-  'user.registered': 'info',
-  'user.login': 'info',
-  'user.logout': 'info',
-  'user.login_failed': 'warning',
-  'mfa.setup': 'info',
-  'mfa.enabled': 'info',
-  'mfa.disabled': 'warning',
-  'mfa.verified': 'info',
-  'mfa.failed': 'warning',
-  'vault.created': 'info',
-  'vault.updated': 'info',
-  'vault.deleted': 'high',
-  'vault.accessed': 'low',
-  'entry.created': 'info',
-  'entry.updated': 'info',
-  'entry.deleted': 'high',
-  'entry.accessed': 'low',
-}
-
 export default function AuditPage() {
   const navigate = useNavigate()
   const [logs, setLogs] = useState([])

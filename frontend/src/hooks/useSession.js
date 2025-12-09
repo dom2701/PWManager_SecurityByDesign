@@ -19,7 +19,7 @@ function clearTimer() {
 function expireSession() {
   // call backend logout, clear client tokens
   try {
-    logoutUser()
+    handleLogout()
   } catch {
     // ignore
   }
