@@ -158,7 +158,11 @@ export default function AuditPage() {
     setLoading(true)
     setError(null)
     try {
-      const data = await getAuditLogs({ limit: 500 })
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
+      const data = await getAuditLogs({ limit: 500, signal: controller.signal })
+      clearTimeout(timeout)
       setAuditLogs(Array.isArray(data) ? data : fallbackAuditLogs)
     } catch (err) {
       console.error('Failed to load audit logs, using fallback:', err)
@@ -186,14 +190,22 @@ export default function AuditPage() {
   }
 
   const filteredLogs = auditLogs.filter(log => {
-    const matchesSearch = 
-      log.target.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.vault.toLowerCase().includes(searchTerm.toLowerCase())
+    // Safely access properties with fallback to empty string
+    const target = (log.target || '').toLowerCase()
+    const user = (log.user || '').toLowerCase()
+    const details = (log.details || '').toLowerCase()
+    const vault = (log.vault || '').toLowerCase()
+    const action = log.action || ''
+    const type = log.type || ''
     
-    const matchesAction = filterAction === 'ALL' || log.action === filterAction
-    const matchesType = filterType === 'ALL' || log.type === filterType
+    const matchesSearch = 
+      target.includes(searchTerm.toLowerCase()) ||
+      user.includes(searchTerm.toLowerCase()) ||
+      details.includes(searchTerm.toLowerCase()) ||
+      vault.includes(searchTerm.toLowerCase())
+    
+    const matchesAction = filterAction === 'ALL' || action === filterAction
+    const matchesType = filterType === 'ALL' || type === filterType
 
     return matchesSearch && matchesAction && matchesType
   })
