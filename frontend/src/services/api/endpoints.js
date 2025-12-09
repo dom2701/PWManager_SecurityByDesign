@@ -118,3 +118,32 @@ export const getAuditLogDetails = (logId) => {
   return api.get(`/audit/logs/${logId}`)
 }
 
+// ========================
+// MFA Endpoints
+// ========================
+
+/**
+ * Setup MFA - Get QR code and backup codes
+ * @returns {Promise} MFA setup data with QR code and backup codes
+ */
+export const setupMFA = () => {
+  return api.post('/auth/mfa/setup', {})
+}
+
+/**
+ * Verify MFA - Enable MFA with TOTP code
+ * @param {string} code - 6-digit TOTP code
+ * @returns {Promise} Verification result
+ */
+export const verifyMFA = (code) => {
+  return api.post('/auth/mfa/verify', { code })
+}
+
+/**
+ * Disable MFA
+ * @returns {Promise} Disable result
+ */
+export const disableMFA = () => {
+  return api.post('/auth/mfa/disable', {})
+}
+

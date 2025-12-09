@@ -32,7 +32,14 @@ async function apiCall(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const error = new Error(data?.error || data?.message || 'API Error')
+      let message = 'API Error'
+      if (data && typeof data === 'object') {
+        message = data.error || data.message || message
+      } else if (typeof data === 'string' && data.trim() !== '') {
+        message = data.trim()
+      }
+
+      const error = new Error(message)
       error.status = response.status
       error.data = data
       throw error

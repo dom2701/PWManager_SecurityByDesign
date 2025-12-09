@@ -8,13 +8,18 @@ import * as api from '../api/client'
  * Login user with email and password
  * @param {string} email - User email
  * @param {string} password - User password
+ * @param {string|undefined} mfaCode - Optional MFA code (6 digits)
  * @returns {Promise} Login response with session data
  */
-export const loginUser = (email, password) => {
-  return api.post('/auth/login', {
+export const loginUser = (email, password, mfaCode) => {
+  const payload = {
     email,
     password,
-  })
+  }
+  if (mfaCode) {
+    payload.mfa_code = mfaCode
+  }
+  return api.post('/auth/login', payload)
 }
 
 /**

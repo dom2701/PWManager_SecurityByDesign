@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"image/png"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/SecurityByDesign/pwmanager/internal/auth"
@@ -215,9 +218,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	_ = h.auditRepo.Create(c.Request.Context(), &user.ID, models.ActionUserLogin,
 		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
 
+	userResp := user.ToResponse()
+	if mfa != nil {
+		userResp.MFAEnabled = mfa.Enabled
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "login successful",
-		"user":    user.ToResponse(),
+		"user":    userResp,
 	})
 }
 
@@ -283,7 +291,19 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user.ToResponse())
+	mfa, err := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to get mfa status", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	resp := user.ToResponse()
+	if mfa != nil {
+		resp.MFAEnabled = mfa.Enabled
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // SetupMFA initiates MFA setup
@@ -335,7 +355,7 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 		return
 	}
 
-	// Save to DB (or update if exists but not enabled)
+	// Prepare MFA secret (persist after backup codes are added)
 	mfa := &models.MFASecret{
 		UserID:              userID,
 		TOTPSecretEncrypted: encryptedSecret,
@@ -343,6 +363,25 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 		Enabled:             false,
 	}
 
+	// Generate backup codes (10 codes, 8 chars each)
+	backupCodes, err := generateBackupCodes(10)
+	if err != nil {
+		h.logger.Error("failed to generate backup codes", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	// Encrypt backup codes as comma-separated string
+	encryptedBackupCodes, err := crypto.Encrypt([]byte(strings.Join(backupCodes, ",")), h.encryptionKey)
+	if err != nil {
+		h.logger.Error("failed to encrypt backup codes", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	mfa.BackupCodesEncrypted = encryptedBackupCodes
+
+	// Persist MFA secret with backup codes
 	if existingMFA != nil {
 		mfa.ID = existingMFA.ID
 		err = h.mfaRepo.Update(c.Request.Context(), mfa)
@@ -377,8 +416,9 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
 
 	c.JSON(http.StatusOK, models.MFASetupResponse{
-		Secret: key.Secret(),
-		QRCode: "data:image/png;base64," + qrCodeBase64,
+		Secret:      key.Secret(),
+		QRCode:      qrCodeBase64, // raw base64, frontend prepends data URI
+		BackupCodes: backupCodes,
 	})
 }
 
@@ -479,4 +519,19 @@ func (h *AuthHandler) DisableMFA(c *gin.Context) {
 		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
 
 	c.JSON(http.StatusOK, gin.H{"message": "MFA disabled successfully"})
+}
+
+// generateBackupCodes creates n random, uppercase hex codes (length ~10)
+func generateBackupCodes(n int) ([]string, error) {
+	codes := make([]string, n)
+
+	for i := 0; i < n; i++ {
+		buf := make([]byte, 5)
+		if _, err := rand.Read(buf); err != nil {
+			return nil, err
+		}
+		codes[i] = fmt.Sprintf("%X", buf)
+	}
+
+	return codes, nil
 }

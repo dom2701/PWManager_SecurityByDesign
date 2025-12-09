@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, changePassword } from '../../services/auth'
+import { MFASetupModal } from '../../components/MFASetupModal'
+import { MFADisableModal } from '../../components/MFADisableModal'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -14,6 +16,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [mfaEnabled, setMfaEnabled] = useState(false)
+  const [showMFASetupModal, setShowMFASetupModal] = useState(false)
+  const [showMFADisableModal, setShowMFADisableModal] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -24,6 +29,7 @@ export default function SettingsPage() {
     try {
       const userData = await getCurrentUser()
       setProfile(userData)
+      setMfaEnabled(Boolean(userData?.mfa_enabled))
     } catch (err) {
       console.error('Failed to load user profile:', err)
       setError('Fehler beim Laden des Profils')
@@ -86,6 +92,18 @@ export default function SettingsPage() {
     setShowConfirmModal(false)
     setConfirmText('')
     setError('')
+  }
+
+  const handleMFASuccess = () => {
+    setSuccess('MFA erfolgreich aktiviert!')
+    setShowMFASetupModal(false)
+    loadProfile()
+  }
+
+  const handleMFADisableSuccess = () => {
+    setSuccess('MFA erfolgreich deaktiviert!')
+    setShowMFADisableModal(false)
+    loadProfile()
   }
 
   return (
@@ -233,7 +251,58 @@ export default function SettingsPage() {
         </form>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* MFA Card */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Zwei-Faktor-Authentifizierung (MFA)
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Schütze dein Konto mit einer zusätzlichen Sicherheitsebene
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              mfaEnabled
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}>
+              {mfaEnabled ? '✓ Aktiviert' : 'Deaktiviert'}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          {!mfaEnabled ? (
+            <button
+              onClick={() => setShowMFASetupModal(true)}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+            >
+              MFA aktivieren
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowMFADisableModal(true)}
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+            >
+              MFA deaktivieren
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* MFA Modals */}
+      <MFASetupModal
+        isOpen={showMFASetupModal}
+        onClose={() => setShowMFASetupModal(false)}
+        onSuccess={handleMFASuccess}
+      />
+      <MFADisableModal
+        isOpen={showMFADisableModal}
+        onClose={() => setShowMFADisableModal(false)}
+        onSuccess={handleMFADisableSuccess}
+      />
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
