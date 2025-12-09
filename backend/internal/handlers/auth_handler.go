@@ -338,25 +338,12 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 		return
 	}
 
-	// Save to DB (or update if exists but not enabled)
+	// Prepare MFA secret (persist after backup codes are added)
 	mfa := &models.MFASecret{
 		UserID:              userID,
 		TOTPSecretEncrypted: encryptedSecret,
 		Method:              "totp",
 		Enabled:             false,
-	}
-
-	if existingMFA != nil {
-		mfa.ID = existingMFA.ID
-		err = h.mfaRepo.Update(c.Request.Context(), mfa)
-	} else {
-		err = h.mfaRepo.Create(c.Request.Context(), mfa)
-	}
-
-	if err != nil {
-		h.logger.Error("failed to save mfa secret", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
 	}
 
 	// Generate backup codes (10 codes, 8 chars each)
