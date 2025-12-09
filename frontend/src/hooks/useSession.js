@@ -1,4 +1,4 @@
-import { logoutUser } from '../services/auth'
+import { logoutUser as logoutUserAPI } from '../services/auth'
 
 const INACTIVITY_MS = 15 * 60 * 1000 // 15 minutes
 
@@ -19,7 +19,7 @@ function clearTimer() {
 function expireSession() {
   // call backend logout, clear client tokens
   try {
-    handleLogout()
+    logoutUserAPI()
   } catch {
     // ignore
   }
