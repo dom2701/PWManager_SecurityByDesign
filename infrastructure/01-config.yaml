@@ -15,8 +15,11 @@ metadata:
   name: pwmanager-secrets
   namespace: pwmanager
 type: Opaque
+# Secrets should not be committed to git in plain text.
+# In a real environment, use Sealed Secrets, External Secrets, or create this secret manually.
+# For this example, we use placeholders that must be replaced before applying or created manually.
 stringData:
-  POSTGRES_PASSWORD: "secure_password_change_me"
-  SESSION_SECRET: "e739193437bcbd9b4a404df30fe38024c1d74629cb7e4248238c30cf9e1a2dfb"
-  MASTER_ENCRYPTION_KEY: "b5d0fe44692523ad87daca72d3478903"
-  DATABASE_URL: "postgres://pwmanager_user:secure_password_change_me@postgres.pwmanager.svc.cluster.local:5432/pwmanager?sslmode=disable"
+  POSTGRES_PASSWORD: "POSTGRES_PASSWORD_PLACEHOLDER"
+  SESSION_SECRET: "SESSION_SECRET_PLACEHOLDER"
+  MASTER_ENCRYPTION_KEY: "MASTER_ENCRYPTION_KEY_PLACEHOLDER"
+  DATABASE_URL: "postgres://pwmanager_user:POSTGRES_PASSWORD_PLACEHOLDER@postgres.pwmanager.svc.cluster.local:5432/pwmanager?sslmode=disable"
