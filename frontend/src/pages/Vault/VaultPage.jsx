@@ -26,6 +26,30 @@ export default function VaultPage() {
   const [encryptionKey, setEncryptionKey] = useState(null)
   const [showMasterPasswordPrompt, setShowMasterPasswordPrompt] = useState(true)
 
+  const [clipboardCountdown, setClipboardCountdown] = useState(0)
+  const [lastCopiedText, setLastCopiedText] = useState(null)
+
+  // Clipboard countdown effect
+  useEffect(() => {
+    let interval = null
+    if (clipboardCountdown > 0) {
+      interval = setInterval(() => {
+        setClipboardCountdown((prev) => {
+          if (prev <= 1) {
+            // Time to clear
+            navigator.clipboard.writeText('')
+            setLastCopiedText(null)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [clipboardCountdown])
+
   // Load vault and entries
   useEffect(() => {
     loadVault()
@@ -190,6 +214,10 @@ export default function VaultPage() {
     navigator.clipboard.writeText(text)
     setCopiedId(entryId)
     setTimeout(() => setCopiedId(null), 2000)
+    
+    // Reset countdown
+    setClipboardCountdown(15)
+    setLastCopiedText(text)
   }
 
   // Toggle password visibility
@@ -416,6 +444,40 @@ export default function VaultPage() {
         entry={editingEntry}
         mode={modalMode}
       />
+
+      {/* Clipboard Countdown Progress Bar */}
+      {clipboardCountdown > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-50">
+          <div className="max-w-4xl mx-auto flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Zwischenablage wird bereinigt in...
+                </span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {clipboardCountdown}s
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div 
+                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-1000 ease-linear" 
+                  style={{ width: `${(clipboardCountdown / 15) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText('')
+                setClipboardCountdown(0)
+                setLastCopiedText(null)
+              }}
+              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 transition-colors"
+            >
+              Jetzt löschen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
