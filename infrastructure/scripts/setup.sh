@@ -31,4 +31,7 @@ kubectl apply -f infrastructure/03-app.yaml
 # Apply network policies
 kubectl apply -f infrastructure/04-network-policies.yaml
 
+# Apply Ingress
+kubectl apply -f infrastructure/05-ingress.yaml
+
 echo "Deployment applied successfully."
