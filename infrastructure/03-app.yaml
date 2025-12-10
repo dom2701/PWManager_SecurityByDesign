@@ -24,6 +24,7 @@ spec:
       containers:
         - name: backend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           envFrom:
@@ -40,6 +41,8 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: cache
+              mountPath: /home/appuser/.cache
           resources:
             requests:
               memory: "64Mi"
@@ -49,6 +52,8 @@ spec:
               cpu: "500m"
       volumes:
         - name: tmp
+          emptyDir: {}
+        - name: cache
           emptyDir: {}
 ---
 apiVersion: v1
@@ -89,6 +94,7 @@ spec:
       containers:
         - name: frontend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           securityContext:

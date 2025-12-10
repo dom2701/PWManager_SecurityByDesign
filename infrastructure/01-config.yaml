@@ -7,7 +7,9 @@ data:
   POSTGRES_USER: "pwmanager_user"
   POSTGRES_DB: "pwmanager"
   REDIS_URL: "redis://redis.pwmanager.svc.cluster.local:6379/0"
-  VITE_API_URL: "http://backend.pwmanager.svc.cluster.local:8080" # For frontend if needed server-side or build-time
+  VITE_API_URL: "http://backend.pwmanager.svc.cluster.local:8080"
+  ENV: "production"
+  GIN_MODE: "release"
 ---
 apiVersion: v1
 kind: Secret
