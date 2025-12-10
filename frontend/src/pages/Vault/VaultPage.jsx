@@ -31,24 +31,48 @@ export default function VaultPage() {
 
   // Clipboard countdown effect
   useEffect(() => {
-    let interval = null
-    if (clipboardCountdown > 0) {
-      interval = setInterval(() => {
-        setClipboardCountdown((prev) => {
-          if (prev <= 1) {
-            // Time to clear
-            navigator.clipboard.writeText('')
-            setLastCopiedText(null)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    return () => {
-      if (interval) clearInterval(interval)
-    }
+    if (clipboardCountdown <= 0) return
+
+    const interval = setInterval(() => {
+      setClipboardCountdown((prev) => {
+        if (prev <= 1) return 0
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
   }, [clipboardCountdown])
+
+  // Handle clipboard clearing
+  useEffect(() => {
+    if (clipboardCountdown === 0 && lastCopiedText !== null) {
+      const clearClipboard = async () => {
+        try {
+          await navigator.clipboard.writeText('')
+          setLastCopiedText(null)
+        } catch (err) {
+          console.error('Failed to clear clipboard:', err)
+          // Fallback using execCommand
+          try {
+            const textArea = document.createElement("textarea")
+            textArea.value = " " // Empty string might not copy in some browsers
+            textArea.style.position = "fixed"
+            textArea.style.left = "-9999px"
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(textArea)
+            setLastCopiedText(null)
+          } catch (fallbackErr) {
+             console.error('Fallback failed:', fallbackErr)
+             setLastCopiedText(null)
+          }
+        }
+      }
+      clearClipboard()
+    }
+  }, [clipboardCountdown, lastCopiedText])
 
   // Load vault and entries
   useEffect(() => {
