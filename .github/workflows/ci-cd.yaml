@@ -164,11 +164,14 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
 
       - name: Sign Backend image
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
 
       # Frontend Build & Sign
       - name: Build and push Frontend Docker image
@@ -176,10 +179,13 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
 
       - name: Sign Frontend image
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
 
  

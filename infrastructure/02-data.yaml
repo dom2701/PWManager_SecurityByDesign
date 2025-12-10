@@ -21,6 +21,16 @@ spec:
         runAsUser: 70
         runAsGroup: 70
         fsGroup: 70
+      initContainers:
+        - name: init-chmod-data
+          image: busybox
+          command: ["sh", "-c", "chown -R 70:70 /var/lib/postgresql/data"]
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
       containers:
         - name: postgres
           image: postgres:16-alpine
