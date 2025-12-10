@@ -1,21 +1,24 @@
 /**
  * Vault Master Password Manager
- * Stores master passwords in session storage for the current browser session
- * This is Zero-Knowledge: passwords never leave the browser
+ * Stores master passwords in memory for the current browser session.
+ * Passwords are NOT stored in sessionStorage/localStorage to prevent XSS access and DevTools visibility.
+ * This is Zero-Knowledge: passwords never leave the browser.
  */
+
+// In-memory storage for master passwords
+// This will be cleared on page reload, which is a desired security feature.
+let memoryStorage = {}
 
 const STORAGE_KEY = 'vault_master_passwords'
 
 /**
  * Store master password for a vault
  * @param {string} vaultId - Vault ID
- * @param {string} masterPassword - Master password (only stored in session)
+ * @param {string} masterPassword - Master password (only stored in memory)
  */
 export function storeMasterPassword(vaultId, masterPassword) {
   try {
-    const passwords = getMasterPasswords()
-    passwords[vaultId] = masterPassword
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(passwords))
+    memoryStorage[vaultId] = masterPassword
   } catch (err) {
     console.error('Failed to store master password:', err)
   }
@@ -28,8 +31,7 @@ export function storeMasterPassword(vaultId, masterPassword) {
  */
 export function getMasterPassword(vaultId) {
   try {
-    const passwords = getMasterPasswords()
-    return passwords[vaultId] || null
+    return memoryStorage[vaultId] || null
   } catch (err) {
     console.error('Failed to get master password:', err)
     return null
@@ -42,9 +44,7 @@ export function getMasterPassword(vaultId) {
  */
 export function removeMasterPassword(vaultId) {
   try {
-    const passwords = getMasterPasswords()
-    delete passwords[vaultId]
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(passwords))
+    delete memoryStorage[vaultId]
   } catch (err) {
     console.error('Failed to remove master password:', err)
   }
@@ -55,22 +55,11 @@ export function removeMasterPassword(vaultId) {
  */
 export function clearAllMasterPasswords() {
   try {
+    memoryStorage = {}
+    // Also clear from session storage just in case it was there from before
     sessionStorage.removeItem(STORAGE_KEY)
   } catch (err) {
     console.error('Failed to clear master passwords:', err)
   }
 }
 
-/**
- * Get all stored master passwords
- * @returns {object} Object with vaultId as key and password as value
- */
-function getMasterPasswords() {
-  try {
-    const data = sessionStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : {}
-  } catch (err) {
-    console.error('Failed to parse master passwords:', err)
-    return {}
-  }
-}
