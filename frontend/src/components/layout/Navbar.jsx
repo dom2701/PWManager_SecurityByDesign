@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import ThemeToggle from '../ui/ThemeToggle'
 import { clearSession } from '../../hooks/useSession'
 import { logoutUser } from '../../services/auth'
@@ -19,10 +20,10 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-4">
-            <a href="/" className="flex items-center">
+            <Link to="/dashboard" className="flex items-center">
               <img src="/vite.svg" alt="Logo" className="h-8 mr-3" />
               <span className="text-xl font-semibold dark:text-white">PWManager</span>
-            </a>
+            </Link>
           </div>
           
           {/* Right side */}
