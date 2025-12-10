@@ -21,6 +21,31 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+        - name: migrate
+          image: ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/app/migrate"]
+          envFrom:
+            - configMapRef:
+                name: pwmanager-config
+            - secretRef:
+                name: pwmanager-secrets
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: backend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest

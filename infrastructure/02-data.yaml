@@ -61,6 +61,17 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - pwmanager_user
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
