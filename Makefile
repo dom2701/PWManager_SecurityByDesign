@@ -1,4 +1,10 @@
-.PHONY: setup teardown clean
+.PHONY: setup teardown clean build-local
+
+build-local:
+	@echo "Building Docker images locally..."
+	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest ./backend
+	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest ./frontend
+	@echo "Images built. If using k3s/minikube/kind, remember to load them!"
 
 setup:
 	@echo "Setting up PWManager..."
