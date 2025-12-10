@@ -47,7 +47,13 @@ async function apiCall(endpoint, options = {}) {
 
     return data
   } catch (err) {
-    console.error(`API Error [${endpoint}]:`, err)
+    // Sanitize error logging to prevent leaking sensitive data
+    const safeError = {
+      message: err.message,
+      status: err.status,
+      endpoint
+    }
+    console.error(`API Error [${endpoint}]:`, safeError)
     throw err
   }
 }

@@ -361,6 +361,7 @@ export default function DashboardPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateVault}
+        existingVaults={vaults}
       />
 
       {/* Rename Vault Modal */}

@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 /**
  * Modal to create a new vault with master password
  */
-export default function CreateVaultModal({ isOpen, onClose, onSubmit }) {
+export default function CreateVaultModal({ isOpen, onClose, onSubmit, existingVaults = [] }) {
   const [name, setName] = useState('')
   const [masterPassword, setMasterPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -25,6 +25,12 @@ export default function CreateVaultModal({ isOpen, onClose, onSubmit }) {
 
     if (name.length > 255) {
       setError('Vault-Name darf maximal 255 Zeichen lang sein')
+      return
+    }
+
+    // Check for duplicate name
+    if (existingVaults.some(v => v.name.toLowerCase() === name.trim().toLowerCase())) {
+      setError('Ein Vault mit diesem Namen existiert bereits')
       return
     }
 
