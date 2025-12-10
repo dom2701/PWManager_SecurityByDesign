@@ -24,7 +24,7 @@ spec:
       containers:
         - name: backend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           envFrom:
@@ -94,7 +94,7 @@ spec:
       containers:
         - name: frontend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           securityContext:

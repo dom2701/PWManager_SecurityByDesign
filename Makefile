@@ -4,7 +4,14 @@ build-local:
 	@echo "Building Docker images locally..."
 	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest ./backend
 	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest ./frontend
-	@echo "Images built. If using k3s/minikube/kind, remember to load them!"
+	@echo "Images built."
+
+load-k3s:
+	@echo "Loading images into k3s..."
+	@# Pipe docker save output directly to k3s import to avoid temporary files
+	@docker save ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest | sudo k3s ctr images import -
+	@docker save ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest | sudo k3s ctr images import -
+	@echo "Images loaded into k3s."
 
 setup:
 	@echo "Setting up PWManager..."
