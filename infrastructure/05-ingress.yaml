@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pwmanager-ingress
+  namespace: pwmanager
+  annotations:
+    # Enable TLS (Traefik will use a default self-signed cert if no secret is provided)
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    # We use a wildcard or specific domain. For local dev, we can use localhost or a custom domain in /etc/hosts
+    # If host is omitted, it matches any host header
+    - http:
+        paths:
+          # Route /api requests to the backend service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          # Route all other requests to the frontend service
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

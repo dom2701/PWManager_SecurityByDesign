@@ -73,10 +73,18 @@ func main() {
 		zap.String("port", cfg.Server.Port),
 	)
 
-	// Connect to PostgreSQL
-	db, err := sqlx.Connect("postgres", cfg.Database.URL)
+	// Connect to PostgreSQL with retry
+	var db *sqlx.DB
+	for i := 0; i < 30; i++ {
+		db, err = sqlx.Connect("postgres", cfg.Database.URL)
+		if err == nil {
+			break
+		}
+		logger.Warn("Failed to connect to database, retrying in 2 seconds...", zap.Error(err))
+		time.Sleep(2 * time.Second)
+	}
 	if err != nil {
-		logger.Fatal("Failed to connect to database", zap.Error(err))
+		logger.Fatal("Failed to connect to database after multiple retries", zap.Error(err))
 	}
 	defer db.Close()
 
