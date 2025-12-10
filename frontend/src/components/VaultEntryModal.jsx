@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { isValidUrl } from '../utils/validators'
 
 /**
  * Modal to create or edit a vault entry
@@ -70,6 +71,11 @@ export default function VaultEntryModal({ isOpen, onClose, onSubmit, entry = nul
 
     if (!formData.password) {
       setError('Passwort darf nicht leer sein')
+      return
+    }
+
+    if (formData.url && !isValidUrl(formData.url)) {
+      setError('Ungültige URL')
       return
     }
 

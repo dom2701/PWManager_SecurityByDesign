@@ -1,4 +1,5 @@
 import { logoutUser as logoutUserAPI } from '../services/auth'
+import { clearAllMasterPasswords } from '../utils/masterPassword'
 
 const INACTIVITY_MS = 15 * 60 * 1000 // 15 minutes
 
@@ -23,7 +24,7 @@ function expireSession() {
   } catch {
     // ignore
   }
-  try { localStorage.removeItem('authToken') } catch { /* ignore */ }
+  clearSession()
   // navigate to login
   try { window.location.href = '/login' } catch { /* ignore */ }
 }
@@ -69,6 +70,8 @@ export function clearSession() {
   clearTimer()
   detachListeners()
   try { localStorage.removeItem('authToken') } catch { /* ignore */ }
+  try { sessionStorage.clear() } catch { /* ignore */ }
+  clearAllMasterPasswords()
 }
 
 export function useSession() {
