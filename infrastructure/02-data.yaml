@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # checkov:skip=CKV_K8S_40:Using official image user (70) which is non-root
+  # checkov:skip=CKV_K8S_43:Using imagePullPolicy: Always instead of digests for easier maintenance
   name: postgres
   namespace: pwmanager
   labels:
@@ -120,6 +122,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  # checkov:skip=CKV_K8S_40:Using official image user (999) which is non-root
+  # checkov:skip=CKV_K8S_43:Using imagePullPolicy: Always instead of digests for easier maintenance
   name: redis
   namespace: pwmanager
   labels:
