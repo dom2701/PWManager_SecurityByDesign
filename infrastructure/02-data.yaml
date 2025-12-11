@@ -30,12 +30,16 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD_FILE
+              value: /etc/secrets/POSTGRES_PASSWORD
           envFrom:
             - configMapRef:
                 name: pwmanager-config
-            - secretRef:
-                name: pwmanager-secrets
           volumeMounts:
+            - name: secrets
+              mountPath: /etc/secrets
+              readOnly: true
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
             - name: postgres-run
@@ -78,6 +82,9 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
       volumes:
+        - name: secrets
+          secret:
+            secretName: pwmanager-secrets
         - name: postgres-data
           persistentVolumeClaim:
             claimName: postgres-pvc
