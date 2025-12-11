@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVault, getVaultEntries, createVaultEntry, updateVaultEntry, deleteVaultEntry } from '../../services/api/endpoints'
 import { deriveKey, encryptData, decryptData } from '../../utils/crypto'
 import { storeMasterPassword } from '../../utils/masterPassword'
 import VaultEntryModal from '../../components/VaultEntryModal'
+
+const CLIPBOARD_CLEAR_TIMEOUT = 15
+const TEXT_CLIPBOARD_CLEARING = 'Zwischenablage wird bereinigt in...'
+const TEXT_CLEAR_NOW = 'Jetzt löschen'
 
 export default function VaultPage() {
   const { vaultId } = useParams()
@@ -25,6 +29,59 @@ export default function VaultPage() {
   
   const [encryptionKey, setEncryptionKey] = useState(null)
   const [showMasterPasswordPrompt, setShowMasterPasswordPrompt] = useState(true)
+
+  const [clipboardCountdown, setClipboardCountdown] = useState(0)
+  const [lastCopiedText, setLastCopiedText] = useState(null)
+
+  // Clipboard countdown effect
+  useEffect(() => {
+    if (clipboardCountdown <= 0) return
+
+    const interval = setInterval(() => {
+      setClipboardCountdown((prev) => {
+        if (prev <= 1) return 0
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [clipboardCountdown])
+
+  const clearClipboardNow = useCallback(async () => {
+    try {
+      const currentClipboard = await navigator.clipboard.readText()
+      if (currentClipboard === lastCopiedText) {
+        await navigator.clipboard.writeText('')
+      }
+    } catch (err) {
+      console.error('Failed to clear clipboard:', err)
+      // Fallback using execCommand
+      // Note: execCommand is deprecated but used here as a fallback for older browsers
+      // or contexts where the Clipboard API might fail.
+      try {
+        const textArea = document.createElement("textarea")
+        textArea.value = ""
+        textArea.style.position = "fixed"
+        textArea.style.left = "-9999px"
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      } catch (fallbackErr) {
+        console.error('Fallback failed:', fallbackErr)
+      }
+    }
+    setLastCopiedText(null)
+    setClipboardCountdown(0)
+  }, [lastCopiedText])
+
+  // Handle clipboard clearing
+  useEffect(() => {
+    if (clipboardCountdown === 0 && lastCopiedText !== null) {
+      clearClipboardNow()
+    }
+  }, [clipboardCountdown, lastCopiedText, clearClipboardNow])
 
   // Load vault and entries
   useEffect(() => {
@@ -190,6 +247,10 @@ export default function VaultPage() {
     navigator.clipboard.writeText(text)
     setCopiedId(entryId)
     setTimeout(() => setCopiedId(null), 2000)
+    
+    // Reset countdown
+    setClipboardCountdown(CLIPBOARD_CLEAR_TIMEOUT)
+    setLastCopiedText(text)
   }
 
   // Toggle password visibility
@@ -416,6 +477,44 @@ export default function VaultPage() {
         entry={editingEntry}
         mode={modalMode}
       />
+
+      {/* Clipboard Countdown Progress Bar */}
+      {clipboardCountdown > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-50">
+          <div className="max-w-4xl mx-auto flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {TEXT_CLIPBOARD_CLEARING}
+                </span>
+                <span 
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  aria-live="polite"
+                >
+                  {clipboardCountdown}s
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div 
+                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-1000 ease-linear" 
+                  style={{ width: `${(clipboardCountdown / CLIPBOARD_CLEAR_TIMEOUT) * 100}%` }}
+                  role="progressbar"
+                  aria-valuenow={clipboardCountdown}
+                  aria-valuemin={0}
+                  aria-valuemax={CLIPBOARD_CLEAR_TIMEOUT}
+                  aria-label={`Clipboard will be cleared in ${clipboardCountdown} seconds`}
+                ></div>
+              </div>
+            </div>
+            <button
+              onClick={clearClipboardNow}
+              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 transition-colors"
+            >
+              {TEXT_CLEAR_NOW}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
