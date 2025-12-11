@@ -5,6 +5,10 @@ import { deriveKey, encryptData, decryptData } from '../../utils/crypto'
 import { storeMasterPassword } from '../../utils/masterPassword'
 import VaultEntryModal from '../../components/VaultEntryModal'
 
+const CLIPBOARD_CLEAR_TIMEOUT = 15
+const TEXT_CLIPBOARD_CLEARING = 'Zwischenablage wird bereinigt in...'
+const TEXT_CLEAR_NOW = 'Jetzt löschen'
+
 export default function VaultPage() {
   const { vaultId } = useParams()
   const navigate = useNavigate()
@@ -52,6 +56,8 @@ export default function VaultPage() {
     } catch (err) {
       console.error('Failed to clear clipboard:', err)
       // Fallback using execCommand
+      // Note: execCommand is deprecated but used here as a fallback for older browsers
+      // or contexts where the Clipboard API might fail.
       try {
         const textArea = document.createElement("textarea")
         textArea.value = ""
@@ -243,7 +249,7 @@ export default function VaultPage() {
     setTimeout(() => setCopiedId(null), 2000)
     
     // Reset countdown
-    setClipboardCountdown(15)
+    setClipboardCountdown(CLIPBOARD_CLEAR_TIMEOUT)
     setLastCopiedText(text)
   }
 
@@ -479,16 +485,24 @@ export default function VaultPage() {
             <div className="flex-1">
               <div className="flex justify-between mb-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Zwischenablage wird bereinigt in...
+                  {TEXT_CLIPBOARD_CLEARING}
                 </span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span 
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  aria-live="polite"
+                >
                   {clipboardCountdown}s
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                 <div 
                   className="bg-indigo-600 h-2.5 rounded-full transition-all duration-1000 ease-linear" 
-                  style={{ width: `${(clipboardCountdown / 15) * 100}%` }}
+                  style={{ width: `${(clipboardCountdown / CLIPBOARD_CLEAR_TIMEOUT) * 100}%` }}
+                  role="progressbar"
+                  aria-valuenow={clipboardCountdown}
+                  aria-valuemin={0}
+                  aria-valuemax={CLIPBOARD_CLEAR_TIMEOUT}
+                  aria-label={`Clipboard will be cleared in ${clipboardCountdown} seconds`}
                 ></div>
               </div>
             </div>
@@ -496,7 +510,7 @@ export default function VaultPage() {
               onClick={clearClipboardNow}
               className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 transition-colors"
             >
-              Jetzt löschen
+              {TEXT_CLEAR_NOW}
             </button>
           </div>
         </div>
