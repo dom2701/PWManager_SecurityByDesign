@@ -207,10 +207,10 @@ jobs:
 
       - name: Sign Backend image
         run: |
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} > evidence/signing/backend-sign.log 2>&1
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest >> evidence/signing/backend-sign.log 2>&1
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}" > evidence/signing/backend-sign.log 2>&1 || (cat evidence/signing/backend-sign.log && exit 1)
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest" >> evidence/signing/backend-sign.log 2>&1 || (cat evidence/signing/backend-sign.log && exit 1)
           # Verify
-          cosign verify --certificate-identity-regexp .* --certificate-oidc-issuer-regexp .* ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} > evidence/signing/backend-verify.json 2>&1
+          cosign verify --certificate-identity-regexp ".*" --certificate-oidc-issuer-regexp ".*" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}" > evidence/signing/backend-verify.json 2>&1 || (cat evidence/signing/backend-verify.json && exit 1)
 
       # Frontend Build & Sign
       - name: Build and push Frontend Docker image
@@ -224,10 +224,10 @@ jobs:
 
       - name: Sign Frontend image
         run: |
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} > evidence/signing/frontend-sign.log 2>&1
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest >> evidence/signing/frontend-sign.log 2>&1
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}" > evidence/signing/frontend-sign.log 2>&1 || (cat evidence/signing/frontend-sign.log && exit 1)
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest" >> evidence/signing/frontend-sign.log 2>&1 || (cat evidence/signing/frontend-sign.log && exit 1)
           # Verify
-          cosign verify --certificate-identity-regexp .* --certificate-oidc-issuer-regexp .* ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} > evidence/signing/frontend-verify.json 2>&1
+          cosign verify --certificate-identity-regexp ".*" --certificate-oidc-issuer-regexp ".*" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}" > evidence/signing/frontend-verify.json 2>&1 || (cat evidence/signing/frontend-verify.json && exit 1)
 
       - name: Upload Evidence
         if: always()
