@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVault, getVaultEntries, createVaultEntry, updateVaultEntry, deleteVaultEntry } from '../../services/api/endpoints'
 import { deriveKey, encryptData, decryptData } from '../../utils/crypto'
@@ -43,41 +43,39 @@ export default function VaultPage() {
     return () => clearInterval(interval)
   }, [clipboardCountdown])
 
+  const clearClipboardNow = useCallback(async () => {
+    try {
+      const currentClipboard = await navigator.clipboard.readText()
+      if (currentClipboard === lastCopiedText) {
+        await navigator.clipboard.writeText('')
+      }
+    } catch (err) {
+      console.error('Failed to clear clipboard:', err)
+      // Fallback using execCommand
+      try {
+        const textArea = document.createElement("textarea")
+        textArea.value = ""
+        textArea.style.position = "fixed"
+        textArea.style.left = "-9999px"
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      } catch (fallbackErr) {
+        console.error('Fallback failed:', fallbackErr)
+      }
+    }
+    setLastCopiedText(null)
+    setClipboardCountdown(0)
+  }, [lastCopiedText])
+
   // Handle clipboard clearing
   useEffect(() => {
     if (clipboardCountdown === 0 && lastCopiedText !== null) {
-      const clearClipboard = async () => {
-        try {
-          // Check if the clipboard still contains the sensitive text
-          const currentClipboard = await navigator.clipboard.readText()
-          if (currentClipboard === lastCopiedText) {
-            // Clear the clipboard
-            await navigator.clipboard.writeText('')
-          }
-          setLastCopiedText(null)
-        } catch (err) {
-          console.error('Failed to clear clipboard:', err)
-          // Fallback using execCommand
-          try {
-            const textArea = document.createElement("textarea")
-            textArea.value = ""
-            textArea.style.position = "fixed"
-            textArea.style.left = "-9999px"
-            document.body.appendChild(textArea)
-            textArea.focus()
-            textArea.select()
-            document.execCommand('copy')
-            document.body.removeChild(textArea)
-            setLastCopiedText(null)
-          } catch (fallbackErr) {
-             console.error('Fallback failed:', fallbackErr)
-             setLastCopiedText(null)
-          }
-        }
-      }
-      clearClipboard()
+      clearClipboardNow()
     }
-  }, [clipboardCountdown, lastCopiedText])
+  }, [clipboardCountdown, lastCopiedText, clearClipboardNow])
 
   // Load vault and entries
   useEffect(() => {
@@ -495,32 +493,7 @@ export default function VaultPage() {
               </div>
             </div>
             <button
-              onClick={async () => {
-                try {
-                  const currentClipboard = await navigator.clipboard.readText()
-                  if (currentClipboard === lastCopiedText) {
-                    await navigator.clipboard.writeText('')
-                  }
-                } catch (err) {
-                  console.error('Failed to clear clipboard:', err)
-                  // Fallback
-                  try {
-                    const textArea = document.createElement("textarea")
-                    textArea.value = ""
-                    textArea.style.position = "fixed"
-                    textArea.style.left = "-9999px"
-                    document.body.appendChild(textArea)
-                    textArea.focus()
-                    textArea.select()
-                    document.execCommand('copy')
-                    document.body.removeChild(textArea)
-                  } catch (fallbackErr) {
-                    console.error('Fallback failed:', fallbackErr)
-                  }
-                }
-                setClipboardCountdown(0)
-                setLastCopiedText(null)
-              }}
+              onClick={clearClipboardNow}
               className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 transition-colors"
             >
               Jetzt löschen
