@@ -51,9 +51,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evidence
+          name: evidence-backend
           path: evidence/
-          merge-multiple: true
 
   # Frontend Tests
   frontend-test:
@@ -88,9 +87,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evidence
+          name: evidence-frontend
           path: evidence/
-          merge-multiple: true
 
   # Security Scanning & Quality Gate
   security-scan:
@@ -160,9 +158,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evidence
+          name: evidence-security
           path: evidence/
-          merge-multiple: true
 
   # c. Build und Container-Build & d. Image Signing
   build-and-push:
@@ -236,8 +233,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evidence
+          name: evidence-build
           path: evidence/
-          merge-multiple: true
 
  
