@@ -48,14 +48,19 @@ export default function VaultPage() {
     if (clipboardCountdown === 0 && lastCopiedText !== null) {
       const clearClipboard = async () => {
         try {
-          await navigator.clipboard.writeText('')
+          // Check if the clipboard still contains the sensitive text
+          const currentClipboard = await navigator.clipboard.readText()
+          if (currentClipboard === lastCopiedText) {
+            // Clear the clipboard
+            await navigator.clipboard.writeText('')
+          }
           setLastCopiedText(null)
         } catch (err) {
           console.error('Failed to clear clipboard:', err)
           // Fallback using execCommand
           try {
             const textArea = document.createElement("textarea")
-            textArea.value = " " // Empty string might not copy in some browsers
+            textArea.value = ""
             textArea.style.position = "fixed"
             textArea.style.left = "-9999px"
             document.body.appendChild(textArea)
@@ -489,9 +494,30 @@ export default function VaultPage() {
                 ></div>
               </div>
             </div>
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText('')
+            <button
+              onClick={async () => {
+                try {
+                  const currentClipboard = await navigator.clipboard.readText()
+                  if (currentClipboard === lastCopiedText) {
+                    await navigator.clipboard.writeText('')
+                  }
+                } catch (err) {
+                  console.error('Failed to clear clipboard:', err)
+                  // Fallback
+                  try {
+                    const textArea = document.createElement("textarea")
+                    textArea.value = ""
+                    textArea.style.position = "fixed"
+                    textArea.style.left = "-9999px"
+                    document.body.appendChild(textArea)
+                    textArea.focus()
+                    textArea.select()
+                    document.execCommand('copy')
+                    document.body.removeChild(textArea)
+                  } catch (fallbackErr) {
+                    console.error('Fallback failed:', fallbackErr)
+                  }
+                }
                 setClipboardCountdown(0)
                 setLastCopiedText(null)
               }}
