@@ -16,24 +16,18 @@ spec:
         app: postgres
     spec:
       serviceAccountName: postgres-sa
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 70
         runAsGroup: 70
         fsGroup: 70
-      initContainers:
-        - name: init-chmod-data
-          image: busybox
-          command: ["sh", "-c", "chown -R 70:70 /var/lib/postgresql/data"]
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          securityContext:
-            runAsNonRoot: false
-            runAsUser: 0
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
           image: postgres:16-alpine
+          imagePullPolicy: Always
           ports:
             - containerPort: 5432
           envFrom:
@@ -72,6 +66,17 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 2
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - pwmanager_user
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
@@ -123,14 +128,18 @@ spec:
         app: redis
     spec:
       serviceAccountName: redis-sa
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: redis
           image: redis:7-alpine
+          imagePullPolicy: Always
           command: ["redis-server", "--appendonly", "yes"]
           ports:
             - containerPort: 6379
@@ -150,6 +159,16 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
         - name: redis-data
           persistentVolumeClaim:
