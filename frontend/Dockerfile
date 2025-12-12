@@ -10,6 +10,9 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 
+# Update npm to fix vulnerabilities in bundled dependencies (e.g. glob)
+RUN npm install -g npm@latest
+
 # Install serve to run the application
 RUN npm install -g serve
 
