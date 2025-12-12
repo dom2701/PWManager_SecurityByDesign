@@ -1,5 +1,3 @@
-# checkov:skip=CKV_K8S_40:Using official image user (70) which is non-root
-# checkov:skip=CKV_K8S_43:Using imagePullPolicy: Always instead of digests for easier maintenance
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,14 +19,14 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 70
-        runAsGroup: 70
-        fsGroup: 70
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: postgres@sha256:a5074487380d4e686036ce61ed6f2d363939ae9a0c40123d1a9e3bb3a5f344b4
           imagePullPolicy: Always
           ports:
             - containerPort: 5432
@@ -119,8 +117,6 @@ spec:
     - port: 5432
       targetPort: 5432
 ---
-# checkov:skip=CKV_K8S_40:Using official image user (999) which is non-root
-# checkov:skip=CKV_K8S_43:Using imagePullPolicy: Always instead of digests for easier maintenance
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -142,14 +138,14 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: redis
-          image: redis:7-alpine
+          image: redis@sha256:ee64a64eaab618d88051c3ade8f6352d11531fcf79d9a4818b9b183d8c1d18ba
           imagePullPolicy: Always
           command: ["redis-server", "--appendonly", "yes"]
           ports:
