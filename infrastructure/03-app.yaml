@@ -140,6 +140,18 @@ spec:
           - weight: 100
             podAffinityTerm:
               labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - frontend
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: frontend-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: frontend
           image: ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest
@@ -158,18 +170,6 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-          securityContext:frontend-sa
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-      containers:
-        - name: frontend
-          image: ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8080
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
