@@ -33,6 +33,8 @@ spec:
           env:
             - name: POSTGRES_PASSWORD_FILE
               value: /etc/secrets/POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           envFrom:
             - configMapRef:
                 name: pwmanager-config
