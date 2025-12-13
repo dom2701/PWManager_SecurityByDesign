@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +17,7 @@ func main() {
 	_ = godotenv.Load()
 
 	// Get database URL from environment
-	databaseURL := os.Getenv("DATABASE_URL")
+	databaseURL := getEnv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL environment variable is required")
 	}
@@ -110,4 +111,21 @@ func printUsage() {
 	fmt.Println("Environment variables:")
 	fmt.Println("  DATABASE_URL     PostgreSQL connection string (required)")
 	fmt.Println("  MIGRATIONS_DIR   Path to migrations directory (default: file://migrations)")
+}
+
+// getEnv gets an environment variable.
+// It also checks for key + "_FILE" to read from a file (useful for Docker secrets)
+func getEnv(key string) string {
+	// Check for _FILE variant
+	if filePath := os.Getenv(key + "_FILE"); filePath != "" {
+		if content, err := os.ReadFile(filePath); err == nil {
+			// Trim whitespace (newlines) that might be in the file
+			return string(bytes.TrimSpace(content))
+		}
+	}
+
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return ""
 }

@@ -16,32 +16,32 @@ spec:
         app: postgres
     spec:
       serviceAccountName: postgres-sa
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 70
-        runAsGroup: 70
-        fsGroup: 70
-      initContainers:
-        - name: init-chmod-data
-          image: busybox
-          command: ["sh", "-c", "chown -R 70:70 /var/lib/postgresql/data"]
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          securityContext:
-            runAsNonRoot: false
-            runAsUser: 0
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          image: postgres@sha256:a5074487380d4e686036ce61ed6f2d363939ae9a0c40123d1a9e3bb3a5f344b4
+          imagePullPolicy: Always
           ports:
             - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD_FILE
+              value: /etc/secrets/POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           envFrom:
             - configMapRef:
                 name: pwmanager-config
-            - secretRef:
-                name: pwmanager-secrets
           volumeMounts:
+            - name: secrets
+              mountPath: /etc/secrets
+              readOnly: true
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
             - name: postgres-run
@@ -72,7 +72,21 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 2
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - localhost
+                - -U
+                - pwmanager_user
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
       volumes:
+        - name: secrets
+          secret:
+            secretName: pwmanager-secrets
         - name: postgres-data
           persistentVolumeClaim:
             claimName: postgres-pvc
@@ -123,14 +137,18 @@ spec:
         app: redis
     spec:
       serviceAccountName: redis-sa
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: redis
-          image: redis:7-alpine
+          image: redis@sha256:ee64a64eaab618d88051c3ade8f6352d11531fcf79d9a4818b9b183d8c1d18ba
+          imagePullPolicy: Always
           command: ["redis-server", "--appendonly", "yes"]
           ports:
             - containerPort: 6379
@@ -150,6 +168,16 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
         - name: redis-data
           persistentVolumeClaim:

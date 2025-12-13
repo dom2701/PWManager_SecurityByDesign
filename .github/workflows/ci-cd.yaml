@@ -27,6 +27,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create Evidence Directory
+        run: mkdir -p evidence/sast evidence/run
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -42,7 +45,14 @@ jobs:
         with:
           version: latest
           working-directory: backend
-          args: --timeout=5m
+          args: --timeout=5m --out-format=checkstyle:../evidence/sast/golangci-lint.xml
+
+      - name: Upload Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-backend
+          path: evidence/
 
   # Frontend Tests
   frontend-test:
@@ -52,6 +62,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create Evidence Directory
+        run: mkdir -p evidence/sast evidence/run
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,7 +79,47 @@ jobs:
 
       - name: Run linter
         working-directory: frontend
-        run: npm run lint
+        run: |
+          npm run lint -- --format json --output-file ../evidence/sast/frontend-eslint.json
+          npm run lint > ../evidence/run/frontend-lint.log 2>&1 || true
+
+      - name: Upload Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-frontend
+          path: evidence/
+
+  # CodeQL Analysis
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'go', 'javascript' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
 
   # Security Scanning & Quality Gate
   security-scan:
@@ -84,6 +137,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Create Evidence Directories
+        run: mkdir -p evidence/sbom evidence/secrets evidence/sca evidence/sast evidence/run
+
       # SBOM
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@master
@@ -91,19 +147,20 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'cyclonedx'
-          output: 'sbom.cdx.json'
+          output: 'evidence/sbom/sbom.cdx.json'
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
           name: sbom
-          path: sbom.cdx.json
+          path: evidence/sbom/sbom.cdx.json
 
       # Secret Scan 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ARGS: "--report-path=evidence/secrets/gitleaks-report.json --verbose --redact"
 
       # SAST & SCA 
       - name: Trivy Vulnerability Scanner (Quality Gate)
@@ -112,20 +169,38 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'table'
+          output: 'evidence/sca/trivy-sca-report.txt'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+
+      # IaC Scan (Checkov)
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/
+          framework: kubernetes
+          output_format: cli,sarif
+          output_file_path: console,evidence/sast/checkov-report.sarif
+          download_external_modules: true
 
       # SAST (Go specific)
       - name: Run gosec
         uses: securego/gosec@master
         with:
-          args: '-no-fail -fmt sarif -out gosec-results.sarif ./backend/...'
+          args: '-no-fail -fmt sarif -out evidence/sast/gosec-results.sarif ./backend/...'
 
       - name: Upload gosec results
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: gosec-results.sarif
+          sarif_file: evidence/sast/gosec-results.sarif
+
+      - name: Upload Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-security
+          path: evidence/
 
   # c. Build und Container-Build & d. Image Signing
   build-and-push:
@@ -158,6 +233,9 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.7.0
 
+      - name: Create Evidence Directory
+        run: mkdir -p evidence/signing evidence/run evidence/sca
+
       # Backend Build & Sign
       - name: Build and push Backend Docker image
         uses: docker/build-push-action@v5
@@ -166,12 +244,25 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:v1.0.0
 
       - name: Sign Backend image
         run: |
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}" > evidence/signing/backend-sign.log 2>&1 || (cat evidence/signing/backend-sign.log && exit 1)
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:v1.0.0" >> evidence/signing/backend-sign.log 2>&1 || (cat evidence/signing/backend-sign.log && exit 1)
+          # Verify
+          cosign verify --certificate-identity-regexp ".*" --certificate-oidc-issuer-regexp ".*" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}" > evidence/signing/backend-verify.json 2>&1 || (cat evidence/signing/backend-verify.json && exit 1)
+
+      - name: Scan Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'evidence/sca/trivy-image-backend.txt'
 
       # Frontend Build & Sign
       - name: Build and push Frontend Docker image
@@ -181,11 +272,31 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:v1.0.0
 
       - name: Sign Frontend image
         run: |
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}" > evidence/signing/frontend-sign.log 2>&1 || (cat evidence/signing/frontend-sign.log && exit 1)
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:v1.0.0" >> evidence/signing/frontend-sign.log 2>&1 || (cat evidence/signing/frontend-sign.log && exit 1)
+          # Verify
+          cosign verify --certificate-identity-regexp ".*" --certificate-oidc-issuer-regexp ".*" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}" > evidence/signing/frontend-verify.json 2>&1 || (cat evidence/signing/frontend-verify.json && exit 1)
+
+      - name: Scan Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'evidence/sca/trivy-image-frontend.txt'
+
+      - name: Upload Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-build
+          path: evidence/
 
  
