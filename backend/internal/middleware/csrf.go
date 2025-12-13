@@ -18,7 +18,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 		// Get CSRF token from context (set by AuthMiddleware)
 		expectedToken, exists := c.Get("csrf_token")
 		if !exists {
-			// If no session, we assume the user is not authenticated, 
+			// If no session, we assume the user is not authenticated,
 			// so CSRF protection based on session is not applicable.
 			c.Next()
 			return
