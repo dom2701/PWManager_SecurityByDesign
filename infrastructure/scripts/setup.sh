@@ -6,8 +6,8 @@ echo "Generating unique secrets..."
 # Generate secrets
 # Using openssl to generate random strings and tr/head to ensure they are clean and of correct length
 PG_PASS=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 32)
-SESS_SEC=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 32)
-MEK=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c 32)
+SESS_SEC=$(openssl rand -hex 32)
+MEK=$(openssl rand -hex 32)
 
 echo "Applying manifests..."
 
