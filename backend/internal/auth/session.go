@@ -110,14 +110,6 @@ func (sm *SessionManager) GetSession(ctx context.Context, sessionID string) (*Se
 		LastSeen:  lastSeen,
 	}
 
-	return session, nil{
-		ID:        sessionID,
-		UserID:    userID,
-		CreatedAt: createdAt,
-		ExpiresAt: createdAt.Add(sm.maxAge),
-		LastSeen:  lastSeen,
-	}
-
 	return session, nil
 }
 
