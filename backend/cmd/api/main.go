@@ -163,19 +163,31 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
-			auth.POST("/logout", middleware.AuthMiddleware(sessionManager), authHandler.Logout)
-			auth.POST("/change-password", middleware.AuthMiddleware(sessionManager), authHandler.ChangePassword)
-			auth.GET("/me", middleware.AuthMiddleware(sessionManager), authHandler.Me)
+		}
 
-			// MFA routes (protected)
-			auth.POST("/mfa/setup", middleware.AuthMiddleware(sessionManager), authHandler.SetupMFA)
-			auth.POST("/mfa/verify", middleware.AuthMiddleware(sessionManager), authHandler.VerifyMFA)
-			auth.POST("/mfa/disable", middleware.AuthMiddleware(sessionManager), authHandler.DisableMFA)
+		// Auth routes (protected)
+		authProtected := api.Group("/auth")
+		authProtected.Use(middleware.AuthMiddleware(sessionManager))
+		{
+			authProtected.GET("/me", authHandler.Me)
+			authProtected.GET("/csrf", authHandler.GetCSRFToken)
+
+			// CSRF protected routes
+			authCSRF := authProtected.Group("")
+			authCSRF.Use(middleware.CSRFMiddleware())
+			{
+				authCSRF.POST("/logout", authHandler.Logout)
+				authCSRF.POST("/change-password", authHandler.ChangePassword)
+				authCSRF.POST("/mfa/setup", authHandler.SetupMFA)
+				authCSRF.POST("/mfa/verify", authHandler.VerifyMFA)
+				authCSRF.POST("/mfa/disable", authHandler.DisableMFA)
+			}
 		}
 
 		// Protected routes
 		protected := api.Group("")
 		protected.Use(middleware.AuthMiddleware(sessionManager))
+		protected.Use(middleware.CSRFMiddleware())
 		{
 			// Vault routes
 			vaults := protected.Group("/vaults")
