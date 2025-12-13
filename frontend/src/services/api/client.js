@@ -4,6 +4,16 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
+let csrfToken = null;
+
+export function setCSRFToken(token) {
+  csrfToken = token;
+}
+
+export function getCSRFToken() {
+  return csrfToken;
+}
+
 /**
  * Fetch wrapper with error handling
  */
@@ -14,6 +24,7 @@ async function apiCall(endpoint, options = {}) {
     credentials: 'include', // Send cookies with requests
     headers: {
       'Content-Type': 'application/json',
+      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       ...options.headers,
     },
     ...options,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginUser } from '../../services/auth'
+import { setCSRFToken } from '../../services/api/client'
 import { LoginFormValues, LoginFormProps, LoginResponse } from "../../types/auth";
 
 export default function LoginForm(): React.ReactElement {
@@ -26,6 +27,9 @@ export default function LoginForm(): React.ReactElement {
         setError(null)
       } else if (response && (response.user || response.message === 'login successful')) {
         // Session-Cookie wird vom Backend automatisch gesetzt
+        if (response.csrf_token) {
+          setCSRFToken(response.csrf_token)
+        }
         // Zu Dashboard navigieren
         navigate('/dashboard')
       } else {

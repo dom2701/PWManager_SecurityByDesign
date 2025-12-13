@@ -37,6 +37,7 @@ func AuthMiddleware(sessionManager *auth.SessionManager) gin.HandlerFunc {
 		// Store user ID in context for handlers
 		c.Set("user_id", session.UserID)
 		c.Set("session_id", sessionID)
+		c.Set("csrf_token", session.CSRFToken)
 
 		c.Next()
 	}
@@ -61,6 +62,7 @@ func OptionalAuthMiddleware(sessionManager *auth.SessionManager) gin.HandlerFunc
 
 		c.Set("user_id", session.UserID)
 		c.Set("session_id", sessionID)
+		c.Set("csrf_token", session.CSRFToken)
 
 		c.Next()
 	}
