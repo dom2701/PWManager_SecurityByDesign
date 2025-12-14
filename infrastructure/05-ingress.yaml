@@ -4,13 +4,18 @@ metadata:
   name: pwmanager-ingress
   namespace: pwmanager
   annotations:
-    # Enable TLS (Traefik will use a default self-signed cert if no secret is provided)
+    # Enable TLS
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     # Enable HSTS via Middleware
     traefik.ingress.kubernetes.io/router.middlewares: pwmanager-hsts-headers@kubernetescrd
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - localhost
+        - 192.168.42.140
+      secretName: pwmanager-tls
   rules:
     # We use a wildcard or specific domain. For local dev, we can use localhost or a custom domain in /etc/hosts
     # If host is omitted, it matches any host header

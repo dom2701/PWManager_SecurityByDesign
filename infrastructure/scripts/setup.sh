@@ -14,6 +14,17 @@ echo "Applying manifests..."
 # Apply base (Namespace, ServiceAccounts)
 kubectl apply -f infrastructure/00-base.yaml
 
+# Generate and apply TLS certificates
+echo "Setting up TLS..."
+chmod +x infrastructure/scripts/generate-certs.sh
+./infrastructure/scripts/generate-certs.sh
+
+# Create TLS secret (dry-run to allow idempotency)
+kubectl create secret tls pwmanager-tls \
+  --cert="CertificateAuthority/server.crt" \
+  --key="CertificateAuthority/server.key" \
+  -n pwmanager --dry-run=client -o yaml | kubectl apply -f -
+
 # Apply config with substitution
 # We use sed to replace the placeholders in the config file and pipe the result directly to kubectl
 # This ensures secrets are never written to disk
