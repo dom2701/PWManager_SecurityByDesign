@@ -20,24 +20,5 @@ Ein sicherer Online-Passwort-Manager zur zentralen Verwaltung und Verschlüsselu
 - Session-Management mit automatischem Timeout (15 Minuten)
 - Audit-Logging aller sicherheitskritischen Aktionen
 
-### Technologie-Stack
+### Getting Started
 
-**Backend:**
-- Golang
-- SQL-Datenbank
-- RESTful API
-
-**Frontend:**
-- React
-- Tailwind CSS
-- Responsive Design
-
-### Sicherheitsanforderungen
-
-Detaillierte Sicherheitsanforderungen finden Sie in der Datei [`SecurityRequirements.md`](SecurityRequirements.md).
-
-### Dokumentation
-
-- [`architecture.md`](architecture.md) - Detaillierte Systemarchitektur und Kubernetes-Deployment
-- [`roadmap.md`](roadmap.md) - Entwicklungs-Roadmap mit Phasen und Meilensteinen
-- [`SecurityRequirements.md`](SecurityRequirements.md) - Verbindliche Sicherheitsanforderungen (SR-1 bis SR-5)
