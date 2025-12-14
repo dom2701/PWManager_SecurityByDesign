@@ -48,8 +48,9 @@ type SecurityConfig struct {
 
 // SessionConfig holds session management configuration
 type SessionConfig struct {
-	MaxAge      int // in seconds
-	IdleTimeout int // in seconds
+	MaxAge        int // in seconds
+	IdleTimeout   int // in seconds
+	SecureCookies bool
 }
 
 // RateLimitConfig holds rate limiting configuration
@@ -106,8 +107,9 @@ func Load() (*Config, error) {
 			MasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY", ""),
 		},
 		Session: SessionConfig{
-			MaxAge:      getEnvAsInt("SESSION_MAX_AGE", 3600),
-			IdleTimeout: getEnvAsInt("SESSION_IDLE_TIMEOUT", 1800),
+			MaxAge:        getEnvAsInt("SESSION_MAX_AGE", 3600),
+			IdleTimeout:   getEnvAsInt("SESSION_IDLE_TIMEOUT", 1800),
+			SecureCookies: getEnvAsBool("SECURE_COOKIES", true),
 		},
 		RateLimit: RateLimitConfig{
 			RequestsPerMinute:     getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 60),

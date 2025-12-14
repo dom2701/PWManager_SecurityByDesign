@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/SecurityByDesign/pwmanager/internal/auth"
+	"github.com/SecurityByDesign/pwmanager/internal/config"
 	"github.com/SecurityByDesign/pwmanager/internal/middleware"
 	"github.com/SecurityByDesign/pwmanager/internal/models"
 	"github.com/SecurityByDesign/pwmanager/internal/repository"
@@ -28,6 +29,7 @@ type AuthHandler struct {
 	sessionManager *auth.SessionManager
 	argon2Params   *crypto.Argon2Params
 	encryptionKey  string
+	config         *config.Config
 	logger         *zap.Logger
 }
 
@@ -39,6 +41,7 @@ func NewAuthHandler(
 	sessionManager *auth.SessionManager,
 	argon2Params *crypto.Argon2Params,
 	encryptionKey string,
+	cfg *config.Config,
 	logger *zap.Logger,
 ) *AuthHandler {
 	return &AuthHandler{
@@ -48,6 +51,7 @@ func NewAuthHandler(
 		sessionManager: sessionManager,
 		argon2Params:   argon2Params,
 		encryptionKey:  encryptionKey,
+		config:         cfg,
 		logger:         logger,
 	}
 }
@@ -211,8 +215,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		int(time.Until(session.ExpiresAt).Seconds()),
 		"/",
 		"",
-		false, // Set to true in production with HTTPS
-		true,  // HttpOnly
+		h.config.Session.SecureCookies,
+		true, // HttpOnly
 	)
 
 	// Audit log
@@ -261,7 +265,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	// Clear cookie
-	c.SetCookie("session_id", "", -1, "/", "", false, true)
+	c.SetCookie("session_id", "", -1, "/", "", h.config.Session.SecureCookies, true)
 
 	// Audit log
 	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionUserLogout,

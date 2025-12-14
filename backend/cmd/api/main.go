@@ -133,7 +133,7 @@ func main() {
 	}
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(userRepo, mfaRepo, auditRepo, sessionManager, argon2Params, cfg.Security.MasterEncryptionKey, logger)
+	authHandler := handlers.NewAuthHandler(userRepo, mfaRepo, auditRepo, sessionManager, argon2Params, cfg.Security.MasterEncryptionKey, cfg, logger)
 	vaultHandler := handlers.NewVaultHandler(vaultRepo, entryRepo, auditRepo, logger)
 	entryHandler := handlers.NewEntryHandler(entryRepo, vaultRepo, auditRepo, logger)
 	auditHandler := handlers.NewAuditHandler(auditRepo, logger)
