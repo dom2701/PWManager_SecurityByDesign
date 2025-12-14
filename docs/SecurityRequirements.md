@@ -1,8 +1,8 @@
 # Security Requirements
 
 **Projekt:** Passwort Manager  
-**Version:** 1.0  
-**Stand:** Oktober 2025
+**Version:** 2.0  
+**Stand:** 14. Dezember 2025
 
 ---
 
