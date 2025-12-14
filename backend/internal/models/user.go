@@ -25,20 +25,29 @@ type UserRegistrationRequest struct {
 type UserLoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+	MFACode  string `json:"mfa_code,omitempty"`
+}
+
+// ChangePasswordRequest represents the change password request payload
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=12,max=128"`
 }
 
 // UserResponse represents the user response (without sensitive data)
 type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         uuid.UUID `json:"id"`
+	Email      string    `json:"email"`
+	CreatedAt  time.Time `json:"created_at"`
+	MFAEnabled bool      `json:"mfa_enabled"`
 }
 
 // ToResponse converts User to UserResponse
 func (u *User) ToResponse() UserResponse {
 	return UserResponse{
-		ID:        u.ID,
-		Email:     u.Email,
-		CreatedAt: u.CreatedAt,
+		ID:         u.ID,
+		Email:      u.Email,
+		CreatedAt:  u.CreatedAt,
+		MFAEnabled: false,
 	}
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
@@ -47,13 +48,15 @@ type SecurityConfig struct {
 
 // SessionConfig holds session management configuration
 type SessionConfig struct {
-	MaxAge      int // in seconds
-	IdleTimeout int // in seconds
+	MaxAge        int // in seconds
+	IdleTimeout   int // in seconds
+	SecureCookies bool
 }
 
 // RateLimitConfig holds rate limiting configuration
 type RateLimitConfig struct {
-	RequestsPerMinute int
+	RequestsPerMinute     int
+	AuthRequestsPerMinute int
 }
 
 // CORSConfig holds CORS configuration
@@ -104,11 +107,13 @@ func Load() (*Config, error) {
 			MasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY", ""),
 		},
 		Session: SessionConfig{
-			MaxAge:      getEnvAsInt("SESSION_MAX_AGE", 3600),
-			IdleTimeout: getEnvAsInt("SESSION_IDLE_TIMEOUT", 1800),
+			MaxAge:        getEnvAsInt("SESSION_MAX_AGE", 3600),
+			IdleTimeout:   getEnvAsInt("SESSION_IDLE_TIMEOUT", 900),
+			SecureCookies: getEnvAsBool("SECURE_COOKIES", true),
 		},
 		RateLimit: RateLimitConfig{
-			RequestsPerMinute: getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 60),
+			RequestsPerMinute:     getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 60),
+			AuthRequestsPerMinute: getEnvAsInt("RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE", 5),
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
@@ -177,7 +182,18 @@ func (c *Config) IsProduction() bool {
 }
 
 // getEnv gets an environment variable with a default value
+// It also checks for key + "_FILE" to read from a file (useful for Docker secrets)
 func getEnv(key, defaultValue string) string {
+	// Check for _FILE variant
+	if filePath := os.Getenv(key + "_FILE"); filePath != "" {
+		content, err := os.ReadFile(filePath)
+		if err == nil {
+			// Trim whitespace (newlines) that might be in the file
+			return string(bytes.TrimSpace(content))
+		}
+		fmt.Printf("Failed to read file %s for env %s: %v\n", filePath, key, err)
+	}
+
 	if value := os.Getenv(key); value != "" {
 		return value
 	}

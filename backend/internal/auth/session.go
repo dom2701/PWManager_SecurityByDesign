@@ -22,6 +22,7 @@ type SessionManager struct {
 type Session struct {
 	ID        string
 	UserID    uuid.UUID
+	CSRFToken string
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	LastSeen  time.Time
@@ -44,10 +45,17 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID uuid.UUID) (
 		return nil, fmt.Errorf("failed to generate session ID: %w", err)
 	}
 
+	// Generate CSRF token
+	csrfToken, err := generateSessionID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate CSRF token: %w", err)
+	}
+
 	now := time.Now()
 	session := &Session{
 		ID:        sessionID,
 		UserID:    userID,
+		CSRFToken: csrfToken,
 		CreatedAt: now,
 		ExpiresAt: now.Add(sm.maxAge),
 		LastSeen:  now,
@@ -58,6 +66,7 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID uuid.UUID) (
 	pipe := sm.client.Pipeline()
 	pipe.HSet(ctx, key, map[string]interface{}{
 		"user_id":    userID.String(),
+		"csrf_token": csrfToken,
 		"created_at": now.Unix(),
 		"last_seen":  now.Unix(),
 	})
@@ -103,6 +112,7 @@ func (sm *SessionManager) GetSession(ctx context.Context, sessionID string) (*Se
 	session := &Session{
 		ID:        sessionID,
 		UserID:    userID,
+		CSRFToken: data["csrf_token"],
 		CreatedAt: createdAt,
 		ExpiresAt: createdAt.Add(sm.maxAge),
 		LastSeen:  lastSeen,

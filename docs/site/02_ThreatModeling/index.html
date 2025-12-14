@@ -1,0 +1,1809 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Dokumentation für den Password Manager">
+      
+      
+        <meta name="author" content="Thgagi, dom2701">
+      
+      
+      
+        <link rel="prev" href="../01_Projekt%C3%BCbersicht/">
+      
+      
+        <link rel="next" href="../SecurityRequirements/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>Threat Modeling - PWManager SecurityByDesign</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#2-komponenten-und-sicherheitsanalyse-threat-modeling" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="PWManager SecurityByDesign" class="md-header__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PWManager SecurityByDesign
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Threat Modeling
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Projektübersicht
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Threat Modeling
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../SecurityRequirements/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security Requirements
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../03_Implementierung%20%26%20Anwendungs%E2%80%90Sicherheit/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementierung
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_Deployment_CI_CD/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Deployment & CI/CD
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../K3S_SETUP/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  K3s Setup
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../05_Lessons_Learned/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Lessons Learned
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PWManager SecurityByDesign" class="md-nav__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PWManager SecurityByDesign
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Projektübersicht
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Threat Modeling
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Threat Modeling
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-komponentenbeschreibung" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1. Komponentenbeschreibung
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1. Komponentenbeschreibung">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#211-backend-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1.1. Backend-Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#212-frontend-komponenten" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1.2. Frontend-Komponenten
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#213-infrastruktur-komponenten" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.1.3. Infrastruktur-Komponenten
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-threat-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2. Threat Modeling
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2. Threat Modeling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#221-systemmodell-mit-data-flow-diagram-dfd" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2.1. Systemmodell mit Data Flow Diagram (DFD)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#222-erklarung-der-datenflusse" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.2.2. Erklärung der Datenflüsse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      User &lt;--&gt; Application
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#developer-kubernetes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Developer &lt;--&gt; Kubernetes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-detaillierte-stride-analyse-pro-komponente" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3. Detaillierte STRIDE-Analyse pro Komponente
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3. Detaillierte STRIDE-Analyse pro Komponente">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231-komponente-frontend-spa-react" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.1. Komponente: Frontend SPA (React)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-komponente-backend-api-go" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.2. Komponente: Backend API (Go)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233-komponente-postgresql-datenbank" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.3. Komponente: PostgreSQL Datenbank
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#234-komponente-redis-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.4. Komponente: Redis Cache
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#235-datenfluss-user-frontend-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.5. Datenfluss: User -&gt; Frontend (Input)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#236-datenfluss-frontend-backend-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.6. Datenfluss: Frontend -&gt; Backend (HTTPS)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#237-datenfluss-backend-postgresql-sql" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.7. Datenfluss: Backend -&gt; PostgreSQL (SQL)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#238-datenfluss-backend-redis-internal" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.3.8. Datenfluss: Backend -&gt; Redis (Internal)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-attack-tree-worst-case-compromise-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4. Attack Tree (Worst Case: "Compromise Backend")
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4. Attack Tree (Worst Case: &#34;Compromise Backend&#34;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#241-branch-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1. Branch-Details
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4.1. Branch-Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2411-branch-1-master-password-stealing" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.1. Branch 1: Master Password Stealing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4.1.1. Branch 1: Master Password Stealing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24111-xss-angriff-zur-extraktion-des-master-passworts" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.1.1. XSS-Angriff zur Extraktion des Master-Passworts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24112-keylogger-auf-user-gerat-installiert" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.1.2. Keylogger auf User-Gerät installiert
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24113-phishing-zur-erkennung-des-master-passworts" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.1.3. Phishing zur Erkennung des Master-Passworts
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2412-branch-2-session-hijacking" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.2. Branch 2: Session Hijacking
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4.1.2. Branch 2: Session Hijacking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24121-csrf-attacke-cross-site-request-forgery" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.2.1. CSRF-Attacke (Cross-Site Request Forgery)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24122-session-cookie-theft" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.2.2. Session-Cookie-Theft
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24123-man-in-the-middle-mitm-auf-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.2.3. Man-in-the-Middle (MITM) auf HTTPS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2413-branch-3-database-breach" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.3. Branch 3: Database Breach
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4.1.3. Branch 3: Database Breach">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24131-sql-injection-auf-die-backend-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.3.1. SQL-Injection auf die Backend-API
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24132-direkter-zugriff-auf-postgresql-datenbank" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.3.2. Direkter Zugriff auf PostgreSQL-Datenbank
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24133-redis-session-cache-bruch" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.3.3. Redis-Session-Cache-Bruch
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2414-branch-4-supply-chain-attack" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.4. Branch 4: Supply Chain Attack
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4.1.4. Branch 4: Supply Chain Attack">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#24141-dependency-poisoning" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.4.1. Dependency-Poisoning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24142-kompromittiertes-docker-base-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      2.4.1.4.2. Kompromittiertes Docker-Base-Image
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SecurityRequirements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_Implementierung%20%26%20Anwendungs%E2%80%90Sicherheit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementierung
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_Deployment_CI_CD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment & CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../K3S_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    K3s Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_Lessons_Learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lessons Learned
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="2-komponenten-und-sicherheitsanalyse-threat-modeling">2. Komponenten und Sicherheitsanalyse (Threat Modeling)<a class="headerlink" href="#2-komponenten-und-sicherheitsanalyse-threat-modeling" title="Permanent link">&para;</a></h1>
+<h2 id="21-komponentenbeschreibung">2.1. Komponentenbeschreibung<a class="headerlink" href="#21-komponentenbeschreibung" title="Permanent link">&para;</a></h2>
+<p>Das System folgt einer klassischen Client-Server-Architektur mit einem starken Fokus auf "Security by Design" durch clientseitige Verschlüsselung (Zero-Knowledge-Architektur).</p>
+<h3 id="211-backend-services">2.1.1. Backend-Services<a class="headerlink" href="#211-backend-services" title="Permanent link">&para;</a></h3>
+<p>Das Backend ist als monolithische Go-Anwendung (basierend auf dem Gin-Framework) implementiert, die RESTful APIs bereitstellt.
+*   <strong>API-Layer</strong>: Zentraler Einstiegspunkt für alle Anfragen. Implementiert Middleware für Authentifizierung (Session-basiert), CORS-Richtlinien und strukturiertes Logging.
+*   <strong>Auth-Service</strong>: Verwaltet Identitäten, Registrierung und Anmeldung. Passwörter werden serverseitig mittels Argon2id gehasht. Unterstützt Multi-Faktor-Authentifizierung (MFA), wobei TOTP-Secrets und Backup-Codes serverseitig verschlüsselt (AES-GCM) gespeichert werden.
+*   <strong>Vault-Service</strong>: Zuständig für die Verwaltung von Tresoren und Passworteinträgen. Wichtig: Dieser Service verarbeitet und speichert ausschließlich <em>verschlüsselte</em> Blobs (Ciphertext) und hat keinen Zugriff auf die Klartextdaten oder den Master-Key.
+*   <strong>Audit-Service</strong>: Protokolliert sicherheitsrelevante Ereignisse (z.B. Anmeldeversuche, Datenzugriffe) unveränderbar in der Datenbank, um Nachvollziehbarkeit zu gewährleisten.</p>
+<h3 id="212-frontend-komponenten">2.1.2. Frontend-Komponenten<a class="headerlink" href="#212-frontend-komponenten" title="Permanent link">&para;</a></h3>
+<p>Das Frontend ist eine React-basierte Single Page Application (SPA), die im Browser des Benutzers ausgeführt wird. Sie übernimmt die kritische Aufgabe der kryptographischen Operationen.
+*   <strong>Crypto-Engine (utils/crypto.js)</strong>: Kernkomponente für die Sicherheit. Führt die Schlüsselableitung (PBKDF2) aus dem Master-Passwort durch und verschlüsselt/entschlüsselt Daten lokal mittels AES-GCM. Das Master-Passwort verlässt niemals den Browser-Kontext.
+*   <strong>Session Management</strong>: Verwaltet den Authentifizierungsstatus und implementiert Sicherheitsmechanismen wie Auto-Logout bei Inaktivität (AutoLogoutContext).
+*   <strong>UI-Komponenten</strong>: Stellt Formulare für Authentifizierung und Tresorverwaltung bereit, wobei sensitive Eingaben (wie das Master-Passwort) isoliert verarbeitet werden.</p>
+<h3 id="213-infrastruktur-komponenten">2.1.3. Infrastruktur-Komponenten<a class="headerlink" href="#213-infrastruktur-komponenten" title="Permanent link">&para;</a></h3>
+<p>Die Infrastruktur wird containerisiert (Docker/Kubernetes) betrieben und trennt strikt zwischen Datenhaltung und Verarbeitung.
+*   <strong>Ingress Controller (Traefik)</strong>: Fungiert als Reverse Proxy und Load Balancer. Er terminiert TLS-Verbindungen und routet Anfragen an Frontend oder Backend.
+*   <strong>PostgreSQL Datenbank</strong>: Relationale Datenbank zur persistenten Speicherung von Benutzerdaten (gehasht), verschlüsselten Tresor-Daten und Audit-Logs. Sie läuft in einem isolierten Netzwerksegment.
+*   <strong>Redis Cache</strong>: In-Memory Key-Value Store. Wird primär für das schnelle Speichern und Abrufen von Session-Informationen verwendet, um die Zustandsbehaftung des Backends zu minimieren.</p>
+<hr />
+<h2 id="22-threat-modeling">2.2. Threat Modeling<a class="headerlink" href="#22-threat-modeling" title="Permanent link">&para;</a></h2>
+<h3 id="221-systemmodell-mit-data-flow-diagram-dfd">2.2.1. Systemmodell mit Data Flow Diagram (DFD)<a class="headerlink" href="#221-systemmodell-mit-data-flow-diagram-dfd" title="Permanent link">&para;</a></h3>
+<p><img width="1103" height="695" alt="DataFlowDiagram" src="https://github.com/user-attachments/assets/8979a576-944c-4620-9387-bb1e910e9bdb" /></p>
+<h3 id="222-erklarung-der-datenflusse">2.2.2. Erklärung der Datenflüsse<a class="headerlink" href="#222-erklarung-der-datenflusse" title="Permanent link">&para;</a></h3>
+<h3 id="user-application">User &lt;--&gt; Application<a class="headerlink" href="#user-application" title="Permanent link">&para;</a></h3>
+<ol>
+<li>User sendet verschlüsselte Anfrage an Traefik.</li>
+<li>Traefik leitet Anfrage an Frontend Pods weiter.</li>
+<li>Traefik leitet API-Anfragen an Backend Pods weiter.</li>
+<li>Frontend Pods liefern statische Assets zurück an Traefik.</li>
+<li>Backend prüft Gültigkeit der Session in Redis. </li>
+<li>Redis liefert Session-Data zurück an das Backend.</li>
+<li>Backend führt Datenbank-Operationen auf PostgreSQL aus.</li>
+<li>PostgreSQL liefert Abfrageergebnisse zurück an das Backend.</li>
+<li>Backend sendet API-Antworten an Traeffik zurück.</li>
+<li>Traefik leitet verschlüsselte Antwort zurück an den User.</li>
+</ol>
+<h3 id="developer-kubernetes">Developer &lt;--&gt; Kubernetes<a class="headerlink" href="#developer-kubernetes" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Developer pusht Code-Änderungen zu GitHub.</li>
+<li>GitHub benachrichtigt CI/CD über neuen Commit.</li>
+<li>CI/CD erstellt Docker-Images aus dem Code.</li>
+<li>CI/CD lädt Images in Registry hoch.</li>
+<li>Kubernetes zieht neue Images aus der Registry.</li>
+<li>CI/CD deployed aktualisierte Pods in Kubernetes.</li>
+</ol>
+<hr />
+<h2 id="23-detaillierte-stride-analyse-pro-komponente">2.3. Detaillierte STRIDE-Analyse pro Komponente<a class="headerlink" href="#23-detaillierte-stride-analyse-pro-komponente" title="Permanent link">&para;</a></h2>
+<h3 id="231-komponente-frontend-spa-react">2.3.1. Komponente: Frontend SPA (React)<a class="headerlink" href="#231-komponente-frontend-spa-react" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Phishing / UI Redressing</td>
+<td style="text-align: left;">Angreifer täuscht die Benutzeroberfläche vor, um das Master-Passwort abzugreifen.</td>
+<td style="text-align: left;">Angreifer hostet eine identisch aussehende Seite unter einer ähnlichen Domain (Typosquatting).</td>
+<td style="text-align: left;">Benutzer ruft falsche URL auf.</td>
+<td style="text-align: left;">Schulung der Benutzer, Verwendung von Lesezeichen, Browser-Sicherheitsindikatoren (TLS).</td>
+<td style="text-align: left;">Extern (User)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Cross-Site Scripting (XSS)</td>
+<td style="text-align: left;">Einschleusen von bösartigem JavaScript, das im Kontext der Anwendung ausgeführt wird.</td>
+<td style="text-align: left;">Angreifer speichert ein Skript in einem geteilten Notizfeld, das beim Rendern ausgeführt wird und das Master-Passwort aus dem Speicher liest.</td>
+<td style="text-align: left;">Schwachstelle im Rendering oder in einer Abhängigkeit (Supply Chain).</td>
+<td style="text-align: left;">React Escaping (automatisch), Content Security Policy (CSP), Subresource Integrity (SRI), Regelmäßige Dependency-Audits (<code>npm audit</code>).</td>
+<td style="text-align: left;">Teilweise (React Default aktiv, CSP/SRI fehlen)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Manipulation des Client-Codes</td>
+<td style="text-align: left;">Veränderung des ausgelieferten JavaScript-Bundles (Man-in-the-Middle oder Server-Compromise).</td>
+<td style="text-align: left;">Angreifer modifiziert <code>crypto.js</code> während der Übertragung, um eine Hintertür einzubauen.</td>
+<td style="text-align: left;">Kontrolle über Netzwerk oder CDN/Server.</td>
+<td style="text-align: left;">HTTPS (TLS), Subresource Integrity (SRI) für externe Skripte.</td>
+<td style="text-align: left;">Implementiert (TLS)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Unsichere Speicherung von Secrets</td>
+<td style="text-align: left;">Speicherung des Master-Passworts oder abgeleiteter Schlüssel im LocalStorage/SessionStorage.</td>
+<td style="text-align: left;">Malware auf dem PC liest <code>localStorage</code> aus und stiehlt den Key.</td>
+<td style="text-align: left;">Physischer Zugriff oder XSS.</td>
+<td style="text-align: left;">Secrets nur im flüchtigen Speicher (RAM) halten. Löschen bei Logout/Reload.</td>
+<td style="text-align: left;">Implementiert (Memory-only Design)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Leaking via Browser Cache/History</td>
+<td style="text-align: left;">Sensible Daten verbleiben im Browser-Cache oder in der URL-History.</td>
+<td style="text-align: left;">Master-Passwort wird als URL-Parameter übergeben (<code>?pw=...</code>) und landet in der History.</td>
+<td style="text-align: left;">Zugriff auf Browser-History.</td>
+<td style="text-align: left;">POST-Requests für sensible Daten, <code>Cache-Control: no-store</code> Header, keine sensiblen Daten in URL.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Client-Side Resource Exhaustion</td>
+<td style="text-align: left;">Überlastung des Browsers durch rechenintensive Operationen.</td>
+<td style="text-align: left;">Angreifer manipuliert PBKDF2-Parameter (z.B. 100 Mio. Iterationen), sodass der Browser einfriert.</td>
+<td style="text-align: left;">Manipulation der Konfiguration vom Server.</td>
+<td style="text-align: left;">Validierung der Krypto-Parameter im Client (Obergrenzen).</td>
+<td style="text-align: left;">Offen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Cross-Site Request Forgery (CSRF)</td>
+<td style="text-align: left;">Angreifer zwingt den Browser des Benutzers zu ungewollten Aktionen im authentifizierten Kontext.</td>
+<td style="text-align: left;">Angreifer-Seite sendet POST-Request zum Löschen eines Tresors.</td>
+<td style="text-align: left;">Benutzer ist eingeloggt, keine CSRF-Protection.</td>
+<td style="text-align: left;"><code>SameSite=Lax/Strict</code> Cookies, Anti-CSRF Tokens (für State-Changing Operations).</td>
+<td style="text-align: left;">Teilweise (<code>SameSite</code> Cookies genutzt)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Denial of Service (Offen):</strong> Client-seitige Ressourcenlimits sind schwer durchzusetzen. Der Fokus liegt auf Server-Stabilität.
+*   <strong>Tampering (Teilweise):</strong> CSP und SRI sind komplexe Themen, die für das MVP zurückgestellt wurden, aber für V2 geplant sind.
+*   <strong>Elevation of Privilege (Teilweise):</strong> <code>SameSite=Lax</code> bietet bereits guten Schutz gegen CSRF in modernen Browsern. Vollständige Token-Validierung erhöht die Komplexität signifikant.</p>
+<h3 id="232-komponente-backend-api-go">2.3.2. Komponente: Backend API (Go)<a class="headerlink" href="#232-komponente-backend-api-go" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Service Impersonation</td>
+<td style="text-align: left;">Ein bösartiger Service gibt sich als Backend-API aus.</td>
+<td style="text-align: left;">Angreifer leitet DNS um oder übernimmt IP, um Credentials abzufangen.</td>
+<td style="text-align: left;">Netzwerk-Kontrolle, fehlende Server-Authentifizierung.</td>
+<td style="text-align: left;">TLS-Zertifikate (Server Identity), HSTS.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Dependency Confusion / Supply Chain</td>
+<td style="text-align: left;">Kompromittierte Go-Module oder Docker-Base-Images.</td>
+<td style="text-align: left;">Einschleusen von Schadcode über eine manipulierte Library (<code>go.mod</code>).</td>
+<td style="text-align: left;">Zugriff auf Public Repos oder Build-Pipeline.</td>
+<td style="text-align: left;">Dependency Pinning (<code>go.sum</code>), Vulnerability Scanning (Trivy), Minimal Base Images (Distroless).</td>
+<td style="text-align: left;">Teilweise (<code>go.sum</code> vorhanden)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Insufficient Logging</td>
+<td style="text-align: left;">Fehlende Protokollierung von Sicherheitsvorfällen verhindert Forensik.</td>
+<td style="text-align: left;">Angreifer probiert Passwörter durch (Brute Force), ohne dass es bemerkt wird.</td>
+<td style="text-align: left;">Logging deaktiviert oder unzureichend.</td>
+<td style="text-align: left;">Strukturiertes Audit-Logging (wer, was, wann), zentrales Log-Management.</td>
+<td style="text-align: left;">Implementiert (Audit-Service)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Error Handling Leaks</td>
+<td style="text-align: left;">Stacktraces oder interne Pfade werden bei Fehlern ausgegeben.</td>
+<td style="text-align: left;">API gibt bei DB-Fehler den SQL-Query und Tabellennamen zurück.</td>
+<td style="text-align: left;">Debug-Modus aktiv, schlechtes Error-Handling.</td>
+<td style="text-align: left;">Generische Fehlermeldungen an Client, detaillierte Logs nur intern (Zap Logger).</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Resource Exhaustion</td>
+<td style="text-align: left;">Überlastung von CPU/RAM durch komplexe Anfragen.</td>
+<td style="text-align: left;">Angreifer sendet riesige JSON-Payloads oder initiiert viele TLS-Handshakes.</td>
+<td style="text-align: left;">Kein Rate Limiting, keine Ressourcen-Limits.</td>
+<td style="text-align: left;">Request Size Limits, Timeouts, Rate Limiting (Middleware/Ingress).</td>
+<td style="text-align: left;">Offen (Rate Limiting fehlt)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Broken Access Control</td>
+<td style="text-align: left;">Zugriff auf Ressourcen anderer Benutzer durch ID-Manipulation (IDOR).</td>
+<td style="text-align: left;">Ändern der <code>vault_id</code> in der URL, um fremden Tresor zu lesen.</td>
+<td style="text-align: left;">Fehlende Autorisierungsprüfung im Handler.</td>
+<td style="text-align: left;">Strikte Besitzprüfung (<code>CheckOwnership</code>) bei jedem Zugriff.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Tampering (Teilweise):</strong> <code>go.sum</code> verhindert Änderungen an direkten Abhängigkeiten. Ein vollständiger Supply-Chain-Schutz (z.B. Sigstore) würde den Rahmen des Projekts sprengen.
+*   <strong>Denial of Service (Offen):</strong> Rate Limiting erfordert eine verteilte State-Verwaltung (Redis), was die Komplexität erhöht. Für das MVP wird das Risiko akzeptiert.</p>
+<h3 id="233-komponente-postgresql-datenbank">2.3.3. Komponente: PostgreSQL Datenbank<a class="headerlink" href="#233-komponente-postgresql-datenbank" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Unauthorized Access</td>
+<td style="text-align: left;">Zugriff auf DB ohne gültige Credentials.</td>
+<td style="text-align: left;">Angreifer verbindet sich direkt mit Port 5432.</td>
+<td style="text-align: left;">DB-Port öffentlich exponiert, schwaches Passwort.</td>
+<td style="text-align: left;">DB im privaten Subnetz, Zugriff nur via Backend erlaubt (Network Policies), starke Passwörter.</td>
+<td style="text-align: left;">Implementiert (Docker Network)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Data Corruption</td>
+<td style="text-align: left;">Löschen oder Verändern von Daten durch Malware oder Fehlkonfiguration.</td>
+<td style="text-align: left;">Ransomware verschlüsselt DB-Files.</td>
+<td style="text-align: left;">Zugriff auf Filesystem oder DB-Admin-Rechte.</td>
+<td style="text-align: left;">Regelmäßige Backups, Least Privilege für DB-User.</td>
+<td style="text-align: left;">Offen (Backup-Strategie fehlt)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Admin Activity Hiding</td>
+<td style="text-align: left;">DB-Admin manipuliert Daten und löscht Spuren.</td>
+<td style="text-align: left;">Admin löscht User-Tabelle und deaktiviert Logging.</td>
+<td style="text-align: left;">Admin-Rechte auf DB.</td>
+<td style="text-align: left;">Remote Logging (Logs an separaten Server senden), 4-Augen-Prinzip.</td>
+<td style="text-align: left;">Akzeptiert (Vertrauen in Admin)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Data Theft at Rest</td>
+<td style="text-align: left;">Diebstahl der Datenbank-Dateien oder Backups.</td>
+<td style="text-align: left;">Angreifer kopiert Volume-Daten vom Host.</td>
+<td style="text-align: left;">Zugriff auf Host-System.</td>
+<td style="text-align: left;">Encryption at Rest (Filesystem-Level oder DB-Level), Zero-Knowledge (Daten sind eh verschlüsselt).</td>
+<td style="text-align: left;">Implementiert (Zero-Knowledge)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Connection Exhaustion</td>
+<td style="text-align: left;">Überlasten der DB</td>
+<td style="text-align: left;">Backend öffnet zu viele Connections ohne sie zu schließen (Leak).</td>
+<td style="text-align: left;">Schlechtes Connection Pooling.</td>
+<td style="text-align: left;">Connection Pooling (in <code>sqlx</code> konfiguriert), Max Connections Limit.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Privilege Escalation</td>
+<td style="text-align: left;">Ausnutzen von DB-Schwachstellen für Host-Zugriff.</td>
+<td style="text-align: left;">Exploit in Postgres-Funktion erlaubt Shell-Execution.</td>
+<td style="text-align: left;">Ungepatchte DB-Version.</td>
+<td style="text-align: left;">Regelmäßige Updates, Container als Non-Root User ausführen.</td>
+<td style="text-align: left;">Implementiert (Docker Best Practices)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Tampering (Offen):</strong> Eine umfassende Backup-Strategie (Offsite-Backups, Restore-Tests) ist operativ aufwendig und für die Entwicklungsumgebung nicht priorisiert.
+*   <strong>Repudiation (Akzeptiert):</strong> Das Risiko, dass ein Datenbank-Administrator Logs manipuliert, wird akzeptiert, da dieser ohnehin vollen Zugriff auf die Infrastruktur hat ("Trusted Admin").</p>
+<h3 id="234-komponente-redis-cache">2.3.4. Komponente: Redis Cache<a class="headerlink" href="#234-komponente-redis-cache" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Unauthorized Access</td>
+<td style="text-align: left;">Zugriff auf Redis ohne Authentifizierung.</td>
+<td style="text-align: left;">Angreifer liest alle Session-Keys aus.</td>
+<td style="text-align: left;">Redis oft standardmäßig ohne Passwort ("Protected Mode" aus), Port offen.</td>
+<td style="text-align: left;">Redis Passwort setzen (<code>requirepass</code>), Network Isolation.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Session Manipulation</td>
+<td style="text-align: left;">Verändern von Session-Daten (z.B. <code>user_id</code> ändern).</td>
+<td style="text-align: left;">Angreifer ändert seine Session, um Admin zu werden.</td>
+<td style="text-align: left;">Schreibzugriff auf Redis.</td>
+<td style="text-align: left;">Redis Auth, Integritätsschutz (schwer in Redis, daher Zugriffsschutz priorisieren).</td>
+<td style="text-align: left;">Implementiert (Zugriffsschutz)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Lack of Audit Trail</td>
+<td style="text-align: left;">Änderungen im Cache werden nicht protokolliert.</td>
+<td style="text-align: left;">Angreifer löscht Sessions anderer User (DoS), keine Spur.</td>
+<td style="text-align: left;">Zugriff auf Redis.</td>
+<td style="text-align: left;">Redis Monitor (Performance-Impact!), Zugriffsschutz priorisieren.</td>
+<td style="text-align: left;">Akzeptiert (Network Isolation + starkes PW)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Session Leakage</td>
+<td style="text-align: left;">Auslesen aller aktiven Sessions.</td>
+<td style="text-align: left;">Angreifer dumpt Keyspace.</td>
+<td style="text-align: left;">Lesezugriff auf Redis.</td>
+<td style="text-align: left;">TLS für Redis-Traffic (optional), Zugriffsschutz.</td>
+<td style="text-align: left;">Implementiert (Zugriffsschutz)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Memory Exhaustion</td>
+<td style="text-align: left;">Füllen des Speichers, bis Redis abstürzt (OOM).</td>
+<td style="text-align: left;">Erzeugen von Millionen Fake-Sessions.</td>
+<td style="text-align: left;">Keine Eviction Policy, kein Memory Limit.</td>
+<td style="text-align: left;"><code>maxmemory</code> Limit konfigurieren, <code>allkeys-lru</code> Eviction Policy.</td>
+<td style="text-align: left;">Offen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Container Escape</td>
+<td style="text-align: left;">Ausbruch aus dem Redis-Container auf den Host.</td>
+<td style="text-align: left;">Exploit in Redis Lua Engine.</td>
+<td style="text-align: left;">Ungepatchte Version, Container als Root.</td>
+<td style="text-align: left;">Non-Root User, Seccomp Profile, Updates.</td>
+<td style="text-align: left;">Implementiert (Docker)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Repudiation (Akzeptiert):</strong> Redis ist ein flüchtiger Speicher. Ein Audit-Trail für jeden Cache-Zugriff würde die Performance massiv beeinträchtigen.
+*   <strong>Denial of Service (Offen):</strong> Eine strikte Memory-Eviction-Policy muss sorgfältig konfiguriert werden, um keine validen Sessions zu löschen. Dies erfordert Lasttests.</p>
+<h3 id="235-datenfluss-user-frontend-input">2.3.5. Datenfluss: User -&gt; Frontend (Input)<a class="headerlink" href="#235-datenfluss-user-frontend-input" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Impersonation</td>
+<td style="text-align: left;">Unbefugte Nutzung eines unbeaufsichtigten Geräts.</td>
+<td style="text-align: left;">Kollege nutzt offenen Laptop, während User Kaffee holt.</td>
+<td style="text-align: left;">Physischer Zugriff, Session noch aktiv.</td>
+<td style="text-align: left;">Kurze Session-Timeouts, Auto-Logout bei Inaktivität.</td>
+<td style="text-align: left;">Implementiert (AutoLogoutContext)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Keylogging</td>
+<td style="text-align: left;">Aufzeichnen der Tastatureingaben (Master-Passwort).</td>
+<td style="text-align: left;">Hardware-Keylogger oder Malware auf Client-PC.</td>
+<td style="text-align: left;">Kompromittiertes Endgerät.</td>
+<td style="text-align: left;">Virtuelle Tastatur (begrenzt hilfreich), 2FA/MFA (schützt vor Login auf neuem Gerät, aber nicht vor lokaler Session-Übernahme).</td>
+<td style="text-align: left;">Implementiert (MFA)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Bestreiten von UI-Interaktionen</td>
+<td style="text-align: left;">Benutzer führt eine Aktion aus und behauptet später, dies nicht getan zu haben.</td>
+<td style="text-align: left;">"Ich habe den 'Löschen'-Button nicht geklickt, der Eintrag ist einfach verschwunden."</td>
+<td style="text-align: left;">Fehlende Bestätigungsdialoge.</td>
+<td style="text-align: left;">Erzwungene Bestätigung bei kritischen Aktionen (Modal/Popup), Korrelation mit Backend-Audit-Logs.</td>
+<td style="text-align: left;">Implementiert (UI-Modals)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Shoulder Surfing</td>
+<td style="text-align: left;">Beobachten der Passworteingabe.</td>
+<td style="text-align: left;">Person schaut über die Schulter.</td>
+<td style="text-align: left;">Physische Nähe.</td>
+<td style="text-align: left;">Passwort-Feld maskieren (<code>type="password"</code>), Sichtschutzfolien (User-Verantwortung).</td>
+<td style="text-align: left;">Implementiert (UI)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Input Blocking</td>
+<td style="text-align: left;">Malware blockiert Eingabefelder oder überlagert UI.</td>
+<td style="text-align: left;">Overlay-Attacke verhindert Login.</td>
+<td style="text-align: left;">Malware auf Client.</td>
+<td style="text-align: left;">Antivirus, OS-Sicherheitsmechanismen.</td>
+<td style="text-align: left;">Extern (User Device)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Accessibility Abuse</td>
+<td style="text-align: left;">Malware nutzt A11y-APIs um Rechte zu erlangen/Daten zu lesen.</td>
+<td style="text-align: left;">Screenreader-Malware liest Passwort-Feld.</td>
+<td style="text-align: left;">Malware auf Client.</td>
+<td style="text-align: left;">OS-Permissions prüfen (Mobile), schwer im Web zu verhindern.</td>
+<td style="text-align: left;">Akzeptiert</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Denial of Service (Extern):</strong> Gegen Malware auf dem Endgerät des Benutzers kann die Webanwendung technisch nichts ausrichten.
+*   <strong>Elevation of Privilege (Akzeptiert):</strong> Accessibility-APIs sind notwendig für Barrierefreiheit. Missbrauch durch Malware auf dem Client liegt außerhalb der Kontrolle der Webanwendung.</p>
+<h3 id="236-datenfluss-frontend-backend-https">2.3.6. Datenfluss: Frontend -&gt; Backend (HTTPS)<a class="headerlink" href="#236-datenfluss-frontend-backend-https" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Man-in-the-Middle (MitM)</td>
+<td style="text-align: left;">Angreifer klinkt sich in Verbindung ein.</td>
+<td style="text-align: left;">ARP-Spoofing im öffentlichen WLAN.</td>
+<td style="text-align: left;">Fehlende oder schwache Verschlüsselung.</td>
+<td style="text-align: left;">TLS 1.2/1.3 erzwingen, Starke Cipher-Suites.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Replay Attack</td>
+<td style="text-align: left;">Wiederholtes Senden einer abgefangenen (verschlüsselten) Anfrage.</td>
+<td style="text-align: left;">Angreifer fängt "Create Vault"-Request ab und sendet ihn erneut.</td>
+<td style="text-align: left;">Keine Replay-Protection (Nonces/Timestamps).</td>
+<td style="text-align: left;">TLS (verhindert Replay auf Netzwerkebene), Nonces in API-Design (optional).</td>
+<td style="text-align: left;">Implementiert (TLS)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Bestreiten der Urheberschaft</td>
+<td style="text-align: left;">Ein Benutzer bestreitet, einen bestimmten API-Request (z.B. "Lösche Tresor") gesendet zu haben.</td>
+<td style="text-align: left;">Angreifer nutzt gestohlene Session-ID, um Requests zu senden; Opfer behauptet glaubhaft, es nicht gewesen zu sein.</td>
+<td style="text-align: left;">Session-Hijacking möglich.</td>
+<td style="text-align: left;">IP-Logging, User-Agent Logging, kurze Session-Lifetimes.</td>
+<td style="text-align: left;">Akzeptiert (Risiko durch Session-Schutz minimiert)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Traffic Sniffing</td>
+<td style="text-align: left;">Mitlesen von sensiblen Daten (Session-Cookie, Ciphertext).</td>
+<td style="text-align: left;">Wireshark im unverschlüsselten Netz.</td>
+<td style="text-align: left;">Kein HTTPS.</td>
+<td style="text-align: left;">HTTPS Everywhere, HSTS, Secure Cookies.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Flooding / DDoS</td>
+<td style="text-align: left;">Überfluten der Application.</td>
+<td style="text-align: left;">Volumetrische Angriffe auf den Ingress.</td>
+<td style="text-align: left;">Ausreichende Bandbreite beim Angreifer.</td>
+<td style="text-align: left;">Upstream DDoS Protection (Cloudflare, AWS Shield).</td>
+<td style="text-align: left;">Extern (Infrastruktur)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Parameter Tampering</td>
+<td style="text-align: left;">Manipulation von Parametern im Transit.</td>
+<td style="text-align: left;">Ändern von <code>{"role": "user"}</code> zu <code>{"role": "admin"}</code> im Body.</td>
+<td style="text-align: left;">Kein Integritätsschutz (TLS fehlt).</td>
+<td style="text-align: left;">TLS (Integrität), Serverseitige Validierung.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Repudiation (Akzeptiert):</strong> Client-Zertifikate (mTLS) sind für Endanwender-Anwendungen unpraktikabel (UX). Das Risiko wird durch andere Auth-Mechanismen mitigiert.
+*   <strong>Denial of Service (Extern):</strong> DDoS-Schutz ist Aufgabe der Infrastruktur (Provider), nicht der Applikationslogik.</p>
+<h3 id="237-datenfluss-backend-postgresql-sql">2.3.7. Datenfluss: Backend -&gt; PostgreSQL (SQL)<a class="headerlink" href="#237-datenfluss-backend-postgresql-sql" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Connection Spoofing</td>
+<td style="text-align: left;">Angreifer verbindet sich als Backend zur DB.</td>
+<td style="text-align: left;">IP-Spoofing im internen Netz.</td>
+<td style="text-align: left;">Schwache Netzwerkkontrollen.</td>
+<td style="text-align: left;">mTLS zwischen App und DB, Passwort-Auth.</td>
+<td style="text-align: left;">Implementiert (Passwort)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">SQL Injection</td>
+<td style="text-align: left;">Manipulation der SQL-Query durch User-Input.</td>
+<td style="text-align: left;">Eingabe von <code>' OR 1=1; --</code> im Login-Feld.</td>
+<td style="text-align: left;">Unsichere String-Konkatenation im Code.</td>
+<td style="text-align: left;">Prepared Statements / Parameterized Queries (<code>sqlx</code>).</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">Transaction Denial</td>
+<td style="text-align: left;">DB oder App leugnen Transaktion.</td>
+<td style="text-align: left;">Inkonsistenz zwischen App-Log und DB-Daten.</td>
+<td style="text-align: left;">Fehlende Transaktionslogs.</td>
+<td style="text-align: left;">WAL (Write Ahead Log) in Postgres, App-Audit-Logs.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Logging of Sensitive Data</td>
+<td style="text-align: left;">SQL-Queries mit Parametern landen im Log.</td>
+<td style="text-align: left;">DB-Log enthält Klartext-Daten (hier nur Ciphertext/Hashes, aber trotzdem unschön).</td>
+<td style="text-align: left;">Logging-Level zu hoch (Debug).</td>
+<td style="text-align: left;">Logging konfigurieren (keine Parameter loggen), Zero-Knowledge (Daten sind eh verschlüsselt).</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Slow Queries</td>
+<td style="text-align: left;">Ausführen extrem aufwendiger Queries.</td>
+<td style="text-align: left;">Angreifer triggert Suche, die Full-Table-Scan auslöst.</td>
+<td style="text-align: left;">Fehlende Indizes.</td>
+<td style="text-align: left;">DB-Indizes auf Fremdschlüsseln und Suchfeldern setzen.</td>
+<td style="text-align: left;">Teilweise</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">SQL Injection (EoP)</td>
+<td style="text-align: left;">Nutzung von SQLi zur Rechteausweitung.</td>
+<td style="text-align: left;"><code>UNION SELECT</code> um Admin-Passwort-Hash zu lesen.</td>
+<td style="text-align: left;">SQLi-Lücke.</td>
+<td style="text-align: left;">Prepared Statements.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Denial of Service (Teilweise):</strong> Datenbank-Indizes sind gesetzt, aber eine umfassende Query-Optimierung und Timeouts für alle möglichen Queries fehlen noch.</p>
+<h3 id="238-datenfluss-backend-redis-internal">2.3.8. Datenfluss: Backend -&gt; Redis (Internal)<a class="headerlink" href="#238-datenfluss-backend-redis-internal" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">STRIDE</th>
+<th style="text-align: left;">Bedrohung</th>
+<th style="text-align: left;">Beschreibung</th>
+<th style="text-align: left;">Beispielangriff</th>
+<th style="text-align: left;">Vorraussetzungen</th>
+<th style="text-align: left;">Gegenmaßnahmen</th>
+<th style="text-align: left;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>S</strong>poofing</td>
+<td style="text-align: left;">Internal MitM</td>
+<td style="text-align: left;">Abfangen der Verbindung im Container-Netzwerk.</td>
+<td style="text-align: left;">Kompromittierter Nachbar-Container sniffed Traffic.</td>
+<td style="text-align: left;">Flaches Netzwerk, ARP-Spoofing möglich.</td>
+<td style="text-align: left;">TLS für Redis (oft Overhead), Network Policies (Isolation).</td>
+<td style="text-align: left;">Teilweise (Isolation)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>T</strong>ampering</td>
+<td style="text-align: left;">Command Injection</td>
+<td style="text-align: left;">Einschleusen von Redis-Befehlen.</td>
+<td style="text-align: left;">CRLF Injection wenn Input ungefiltert an Redis geht.</td>
+<td style="text-align: left;">Unsichere Redis-Library Nutzung.</td>
+<td style="text-align: left;">Nutzung typsicherer Redis-Clients (go-redis).</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>R</strong>epudiation</td>
+<td style="text-align: left;">No Audit</td>
+<td style="text-align: left;">Keine Logs über Cache-Zugriffe.</td>
+<td style="text-align: left;">Siehe oben.</td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">Akzeptiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>I</strong>nformation Disclosure</td>
+<td style="text-align: left;">Unencrypted Transport</td>
+<td style="text-align: left;">Session-IDs werden im Klartext übertragen (intern).</td>
+<td style="text-align: left;">Siehe oben.</td>
+<td style="text-align: left;">Kein TLS intern.</td>
+<td style="text-align: left;">Risikoakzeptanz im privaten Cluster-Netzwerk oder mTLS (Service Mesh).</td>
+<td style="text-align: left;">Akzeptiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>D</strong>enial of Service</td>
+<td style="text-align: left;">Connection Flooding</td>
+<td style="text-align: left;">Überlastung der Redis-Verbindungen.</td>
+<td style="text-align: left;">Loop öffnet tausende Connections.</td>
+<td style="text-align: left;">Bug oder Angriff.</td>
+<td style="text-align: left;">Connection Pooling, Max Clients Limit.</td>
+<td style="text-align: left;">Implementiert</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>E</strong>levation of Privilege</td>
+<td style="text-align: left;">Lua Sandbox Escape</td>
+<td style="text-align: left;">Ausbruch aus Redis via Lua.</td>
+<td style="text-align: left;">Bösartiges Lua-Skript.</td>
+<td style="text-align: left;"><code>EVAL</code> Rechte für User.</td>
+<td style="text-align: left;"><code>EVAL</code> deaktivieren oder einschränken (rename-command).</td>
+<td style="text-align: left;">Offen</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Begründung für nicht/teilweise umgesetzte Maßnahmen:</strong>
+*   <strong>Spoofing (Teilweise):</strong> Im internen Docker-Netzwerk wird auf strikte Netzwerk-Isolation vertraut. TLS für Redis-Traffic ist ein Performance-Tradeoff.
+*   <strong>Repudiation (Akzeptiert):</strong> Siehe Redis-Komponente oben (Performance).
+*   <strong>Information Disclosure (Akzeptiert):</strong> Siehe Spoofing. Vertrauen in die Isolation des Container-Netzwerks.
+*   <strong>Elevation of Privilege (Offen):</strong> Das Härten der Redis-Konfiguration (Deaktivieren gefährlicher Befehle) steht noch aus.</p>
+<hr />
+<h2 id="24-attack-tree-worst-case-compromise-backend">2.4. Attack Tree (Worst Case: "Compromise Backend")<a class="headerlink" href="#24-attack-tree-worst-case-compromise-backend" title="Permanent link">&para;</a></h2>
+<p>Das Szenario betrachtet den Fall, dass ein Angreifer volle Kontrolle über den Backend-Container erlangt (z.B. durch RCE).</p>
+<p><strong>Ziel:</strong> Entschlüsselung der Tresore aller Benutzer.</p>
+<p>Der Attack Tree ist aufgrund Darstellungsproblemen unter https://github.com/user-attachments/assets/d645b8ad-3c56-4a53-8cce-1fc076d731fe zu finden.</p>
+<h3 id="241-branch-details">2.4.1. Branch-Details<a class="headerlink" href="#241-branch-details" title="Permanent link">&para;</a></h3>
+<p>Hier werden die Gegenmaßnahmen gegen die Bedrohungen der einzelnen Branches im Detail beschrieben.</p>
+<hr />
+<h4 id="2411-branch-1-master-password-stealing">2.4.1.1. Branch 1: Master Password Stealing<a class="headerlink" href="#2411-branch-1-master-password-stealing" title="Permanent link">&para;</a></h4>
+<h5 id="24111-xss-angriff-zur-extraktion-des-master-passworts">2.4.1.1.1. XSS-Angriff zur Extraktion des Master-Passworts<a class="headerlink" href="#24111-xss-angriff-zur-extraktion-des-master-passworts" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer injiziert bösartigen JavaScript-Code, um das Master-Passwort abzufangen, das der Benutzer eingibt.</p>
+<p><strong>Gegenmaßnahme:</strong> 
+- Das Frontend nutzt React, das standardmäßig HTML-Escaping für JSX-Content durchführt
+- Benutzer-Input wird durch React automatisch escaped, bevor er gerendert wird
+- Keine direkten <code>innerHTML</code> oder <code>dangerouslySetInnerHTML</code>-Operationen für Benutzerdaten
+- Das Passwort-Eingabefeld verwendet <code>type="password"</code> mit nativen Browser-Schutzfunktionen
+- Das Passwort wird sofort nach Eingabe client-seitig mit PBKDF2 deriviert und der Klartext wird nicht persistent gespeichert</p>
+<h5 id="24112-keylogger-auf-user-gerat-installiert">2.4.1.1.2. Keylogger auf User-Gerät installiert<a class="headerlink" href="#24112-keylogger-auf-user-gerat-installiert" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Malware auf dem Client-Gerät erfasst das Master-Passwort während der Eingabe.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Das Master-Passwort wird nur lokal verarbeitet und verlässt das Client-Gerät nie im Klartext
+- Das Passwort-Eingabefeld nutzt HTML5 <code>type="password"</code>, das vom Browser vor vielen Angriffsformen schützt
+- Die PBKDF2-Derivation erfolgt sofort nach Eingabe in <code>frontend/src/handlers/authHandlers.ts</code>
+- Der Klartext wird nicht persistent gespeichert; nur der abgeleitete Schlüssel wird zum Server übertragen
+- Selbst wenn ein Keylogger das Passwort abfängt, müsste der Angreifer zusätzlich die PBKDF2-Derivation (100.000 Iterationen) durchführen</p>
+<h5 id="24113-phishing-zur-erkennung-des-master-passworts">2.4.1.1.3. Phishing zur Erkennung des Master-Passworts<a class="headerlink" href="#24113-phishing-zur-erkennung-des-master-passworts" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer erstellt eine gefälschte Kopie der Anwendung und leitet Benutzer dorthin, um das Master-Passwort zu stehlen.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Die Anwendung ist für HTTPS/TLS konfiguriert in <code>backend/internal/config/config.go</code>
+- TLS kann aktiviert werden mit Zertifikat-Pfaden: <code>c.TLS.Enabled</code>, <code>c.TLS.CertPath</code>, <code>c.TLS.KeyPath</code>
+- Ein gültiges SSL/TLS-Zertifikat von einer vertrauenswürdigen Zertifizierungsstelle muss installiert sein
+- HTTP-&gt;HTTPS-Redirect wird implementiert, um Benutzer zu sicheren Verbindungen zu leiten
+- Der HSTS-Header kann gesetzt werden, um Browser zu zwingen, nur HTTPS-Verbindungen zu verwenden</p>
+<hr />
+<h4 id="2412-branch-2-session-hijacking">2.4.1.2. Branch 2: Session Hijacking<a class="headerlink" href="#2412-branch-2-session-hijacking" title="Permanent link">&para;</a></h4>
+<h5 id="24121-csrf-attacke-cross-site-request-forgery">2.4.1.2.1. CSRF-Attacke (Cross-Site Request Forgery)<a class="headerlink" href="#24121-csrf-attacke-cross-site-request-forgery" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer verleitet einen authentifizierten Benutzer, eine böse Website zu besuchen, die versteckte Anfragen an die API sendet.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- CORS-Konfiguration mit Origin-Whitelist wird eingesetzt
+- Nur Anfragen von konfigurierten Origins werden akzeptiert: <code>Access-Control-Allow-Origin</code> wird restriktiv gesetzt
+- <code>Access-Control-Allow-Credentials: true</code> wird nur bei authentifizierten Requests gesetzt
+- <code>Access-Control-Allow-Methods</code> wird auf notwendige HTTP-Verben beschränkt (POST, PUT, DELETE, GET)
+- Anfragen von unerwarteten Origins werden blockiert</p>
+<h5 id="24122-session-cookie-theft">2.4.1.2.2. Session-Cookie-Theft<a class="headerlink" href="#24122-session-cookie-theft" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer stiehlt die Session-Cookie eines Benutzers (z.B. durch XSS oder MITM) und verwendet sie, um sich auszugeben.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Session-Cookies werden mit <code>HttpOnly</code>-Flag gesetzt, wodurch JavaScript nicht auf die Cookie zugreift (XSS-Prävention)
+- Session-Cookies werden mit <code>Secure</code>-Flag gesetzt, das nur HTTPS-Übertragung erlaubt
+- Session-IDs werden kryptographisch sicher generiert 
+- Sessions werden server-seitig in Redis gespeichert (nicht im Cookie)
+- Session-IDs haben automatische Timeouts und werden nach Inaktivität gelöscht
+- Beim Laden von Sessions wird ein Validierungsmechanismus durchgeführt</p>
+<h5 id="24123-man-in-the-middle-mitm-auf-https">2.4.1.2.3. Man-in-the-Middle (MITM) auf HTTPS<a class="headerlink" href="#24123-man-in-the-middle-mitm-auf-https" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer auf dem Netzwerk versucht, HTTPS-Verbindungen zu manipulieren oder abzufangen.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Die Anwendung erzwingt HTTPS/TLS für alle sensitiven Datenübertragungen
+- Ein gültiges SSL/TLS-Zertifikat von einer vertrauenswürdigen Zertifizierungsstelle ist erforderlich
+- Das Backend unterstützt TLS 1.2+ Konfiguration
+- HTTP-&gt;HTTPS-Redirect wird durchgeführt (301 oder 308), um Benutzer zu sicheren Verbindungen zu leiten
+- Session-Cookies haben das <code>Secure</code>-Flag, das nur HTTPS-Übertragung erlaubt
+- Alle sensitive Daten (Passwörter, Session-Token) werden nur über verschlüsselte Verbindungen übertragen</p>
+<hr />
+<h4 id="2413-branch-3-database-breach">2.4.1.3. Branch 3: Database Breach<a class="headerlink" href="#2413-branch-3-database-breach" title="Permanent link">&para;</a></h4>
+<h5 id="24131-sql-injection-auf-die-backend-api">2.4.1.3.1. SQL-Injection auf die Backend-API<a class="headerlink" href="#24131-sql-injection-auf-die-backend-api" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer injiziert SQL-Code über API-Parameter, um die Datenbank zu kompromittieren.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Durchgehend werden parameterisierte Queries mit dem <code>sqlx</code>-Framework verwendet
+- Benutzer-Input wird nie direkt in SQL-Strings konkateniert
+- sqlx führt automatisch Escaping durch und validiert Eingaben
+- Dies verhindert SQL-Injection-Angriffe vollständig</p>
+<h5 id="24132-direkter-zugriff-auf-postgresql-datenbank">2.4.1.3.2. Direkter Zugriff auf PostgreSQL-Datenbank<a class="headerlink" href="#24132-direkter-zugriff-auf-postgresql-datenbank" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer erhält direkten Zugriff auf PostgreSQL (Port 5432) und kann beliebige SQL-Befehle ausführen.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- PostgreSQL ist in Docker/Kubernetes nur über interne Netzwerke erreichbar, nicht öffentlich exponiert
+- In <code>docker-compose.backend.yml</code> ist PostgreSQL nur im internen Netzwerk konfiguriert
+- Datenbankzugriffe erfolgen ausschließlich über die Anwendung
+- Die Datenbankverbindung wird von der Anwendung verwaltet
+- Datenbank-Credentials werden nicht im Code gespeichert, sondern über Environment-Variablen injiziert
+- Alle Datenbankzugriffe erfolgen über authentifizierte API-Endpoints mit Session-Validierung
+- Benutzer können nur ihre eigenen Vaults und Einträge abrufen</p>
+<h5 id="24133-redis-session-cache-bruch">2.4.1.3.3. Redis-Session-Cache-Bruch<a class="headerlink" href="#24133-redis-session-cache-bruch" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer erhält Zugriff auf Redis und kann Session-Daten manipulieren oder stehlen.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Redis ist in Docker/Kubernetes nur über interne Netzwerke erreichbar, nicht öffentlich exponiert
+- Redis ist nicht auf der öffentlichen IP-Adresse konfiguriert
+- Session-Daten werden server-seitig in Redis gespeichert, aber Session-IDs sind kryptographisch sicher und nicht vorhersehbar
+- Sessions haben automatische TTL (Time-To-Live) und Timeouts
+- Session-IDs können nicht einfach manipuliert werden, da sie nur als zufällige Referenzen gespeichert werden
+- Die Session-ID ist nur eine zufällige 256-Bit-Zahl, die auf Server-Seite validiert wird</p>
+<hr />
+<h4 id="2414-branch-4-supply-chain-attack">2.4.1.4. Branch 4: Supply Chain Attack<a class="headerlink" href="#2414-branch-4-supply-chain-attack" title="Permanent link">&para;</a></h4>
+<h5 id="24141-dependency-poisoning">2.4.1.4.1. Dependency-Poisoning<a class="headerlink" href="#24141-dependency-poisoning" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Ein Angreifer kompromittiert eine Dependency, die das Projekt verwendet, mit bösartigem Code.</p>
+<p><strong>Gegenmaßnahme:</strong>
+- Go: <code>go.mod</code> und <code>go.sum</code> sind versionskontrolliert
+  - <code>go.sum</code> enthält automatisch Checksummen für alle Dependencies
+  - Genau spezifizierte Versionen werden verwendet (keine <code>^</code> oder <code>~</code>)
+- npm: <code>package-lock.json</code> ist versionskontrolliert
+  - <code>package-lock.json</code> enthält Integrität-Checksummen für alle Dependencies
+- Dependencies werden nur aus vertrauenswürdigen Quellen bezogen (pkg.go.dev, npm.org, Maven Central)
+- Änderungen an Checksummen in <code>go.sum</code> oder <code>package-lock.json</code> werden sofort bemerkt</p>
+<h5 id="24142-kompromittiertes-docker-base-image">2.4.1.4.2. Kompromittiertes Docker-Base-Image<a class="headerlink" href="#24142-kompromittiertes-docker-base-image" title="Permanent link">&para;</a></h5>
+<p><strong>Bedrohung:</strong> Das Docker-Base-Image enthält Malware, Backdoors oder Anfälligkeit.</p>
+<p><strong>Implementierte Gegenmaßnahme:</strong>
+- Base-Images werden nur von vertrauenswürdigen Quellen bezogen (Docker Hub Official Images)
+- In <code>backend/Dockerfile</code> und <code>frontend/Dockerfile</code> werden spezifische Image-Versionen verwendet, nicht <code>latest</code>
+- Beispiele aus den Dockerfiles:
+  - Backend: Go Official Image mit spezifischer Version (z.B. <code>golang:1.21</code>)
+  - Frontend: Node Official Image mit spezifischer Version (z.B. <code>node:20</code>)
+- Minimale Base-Images reduzieren die Attack-Surface
+- Secrets werden nicht im Dockerfile oder Image eingebunden, sondern über Environment-Variablen injiziert
+- Nur notwendige Dependencies werden installiert (keine zusätzliche Software)</p>
+<p><strong>Fazit:</strong> Durch das Zero-Knowledge-Design ist das Backend selbst kein "Single Point of Failure" für die Vertraulichkeit der gespeicherten Daten, solange der Client-Code vertrauenswürdig bleibt. Der kritische Pfad verlagert sich auf die Integrität der Frontend-Auslieferung (Supply Chain Attack).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

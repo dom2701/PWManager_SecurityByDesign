@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import Navbar from './Navbar'
 import Footer from './Footer'
+import { AutoLogoutProvider } from '../../context/AutoLogoutContext'
 
 type Props = {
 	children: ReactNode
@@ -8,7 +9,8 @@ type Props = {
 
 export default function LayoutWrapper({ children }: Props) {
 	return (
-		<div className="min-h-screen w-full flex flex-col bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
+		<AutoLogoutProvider>
+			<div className="min-h-screen w-full flex flex-col bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
 			<header>
 				<Navbar />
 			</header>
@@ -17,7 +19,8 @@ export default function LayoutWrapper({ children }: Props) {
 				{children}
 			</main>
 
-			<Footer />
-		</div>
+				<Footer />
+			</div>
+		</AutoLogoutProvider>
 	)
 }

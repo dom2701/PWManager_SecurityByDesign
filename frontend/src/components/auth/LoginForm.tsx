@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { handleLoginSubmit } from '../../handlers/authHandlers'
+import { loginUser } from '../../services/auth'
+import { setCSRFToken } from '../../services/api/client'
 import { LoginFormValues, LoginFormProps, LoginResponse } from "../../types/auth";
 
 export default function LoginForm(): React.ReactElement {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mfaRequired, setMfaRequired] = useState(false)
   const navigate = useNavigate()
 
   async function onSubmit(e: React.FormEvent) {
@@ -15,19 +18,33 @@ export default function LoginForm(): React.ReactElement {
     setError(null)
     setLoading(true)
     try {
-      // Hardkodierte Test-Login-Daten
-      const validUsername = 'admin'
-      const validPassword = 'password123'
+      // Backend-Login mit email und password
+      const response = await (loginUser as any)(email, password, mfaCode || undefined)
       
-      if (username === validUsername && password === validPassword) {
-        const dummyToken = 'dummy_token_' + Date.now()
-        localStorage.setItem('authToken', dummyToken)
+      if (response && response.error === 'mfa_required') {
+        // MFA ist erforderlich
+        setMfaRequired(true)
+        setError(null)
+      } else if (response && (response.user || response.message === 'login successful')) {
+        // Session-Cookie wird vom Backend automatisch gesetzt
+        if (response.csrf_token) {
+          setCSRFToken(response.csrf_token)
+        }
+        // Zu Dashboard navigieren
         navigate('/dashboard')
       } else {
-        setError('Ungültige Anmeldedaten. Verwende: admin / password123')
+        setError('Login erfolgreich, aber keine gültige Antwort erhalten')
       }
     } catch (err: any) {
-      setError(err?.message || 'Fehler beim Einloggen')
+      // Fehlerbehandlung
+      if (err?.status === 403 && err?.data?.error === 'mfa_required') {
+        setMfaRequired(true)
+        setError(null)
+      } else {
+        const errorMessage = err?.data?.error || err?.message || 'Fehler beim Einloggen'
+        setError(errorMessage)
+      }
+      console.error('Login error:', err)
     } finally {
       setLoading(false)
     }
@@ -36,22 +53,19 @@ export default function LoginForm(): React.ReactElement {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-      
-      <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded">
-        Test-Login: <span className="font-mono">admin</span> / <span className="font-mono">password123</span>
-      </div>
 
       <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Nutzername oder E-Mail
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          E-Mail
         </label>
         <input
-          id="username"
-          name="username"
-          type="text"
+          id="email"
+          name="email"
+          type="email"
           required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@example.com"
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
@@ -70,6 +84,29 @@ export default function LoginForm(): React.ReactElement {
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
+
+      {mfaRequired && (
+        <div>
+          <label htmlFor="mfa" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            6-stelliger MFA-Code
+          </label>
+          <input
+            id="mfa"
+            name="mfa"
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            required
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="000000"
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Gebe den Code aus deiner Authentifizierungs-App ein
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <div className="text-sm">

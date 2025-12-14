@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pwmanager-ingress
+  namespace: pwmanager
+  annotations:
+    # Enable TLS
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable HSTS via Middleware
+    traefik.ingress.kubernetes.io/router.middlewares: pwmanager-hsts-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - localhost
+        - 192.168.42.140
+      secretName: pwmanager-tls
+  rules:
+    # We use a wildcard or specific domain. For local dev, we can use localhost or a custom domain in /etc/hosts
+    # If host is omitted, it matches any host header
+    - http:
+        paths:
+          # Route /api requests to the backend service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          # Route all other requests to the frontend service
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: hsts-headers
+  namespace: pwmanager
+spec:
+  headers:
+    # HSTS Configuration (max-age=31536000 seconds = 1 year)
+    forceSTSHeader: true
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+

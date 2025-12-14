@@ -1,4 +1,6 @@
-import { handleLogout } from '../handlers/authHandlers'
+import { logoutUser as logoutUserAPI } from '../services/auth'
+import { clearAllMasterPasswords } from '../utils/masterPassword'
+import { setCSRFToken } from '../services/api/client'
 
 const INACTIVITY_MS = 15 * 60 * 1000 // 15 minutes
 
@@ -19,13 +21,13 @@ function clearTimer() {
 function expireSession() {
   // call backend logout, clear client tokens
   try {
-    handleLogout()
-  } catch (e) {
+    logoutUserAPI()
+  } catch {
     // ignore
   }
-  try { localStorage.removeItem('authToken') } catch (e) {}
+  clearSession()
   // navigate to login
-  try { window.location.href = '/login' } catch (e) {}
+  try { window.location.href = '/login' } catch { /* ignore */ }
 }
 
 function resetTimer() {
@@ -60,7 +62,7 @@ function detachListeners() {
 }
 
 export function startSession(token) {
-  try { if (token) localStorage.setItem('authToken', token) } catch (e) {}
+  try { if (token) localStorage.setItem('authToken', token) } catch { /* ignore */ }
   attachListeners()
   resetTimer()
 }
@@ -68,7 +70,10 @@ export function startSession(token) {
 export function clearSession() {
   clearTimer()
   detachListeners()
-  try { localStorage.removeItem('authToken') } catch (e) {}
+  try { localStorage.removeItem('authToken') } catch { /* ignore */ }
+  try { sessionStorage.clear() } catch { /* ignore */ }
+  clearAllMasterPasswords()
+  setCSRFToken(null)
 }
 
 export function useSession() {
