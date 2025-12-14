@@ -299,4 +299,95 @@ jobs:
           name: evidence-build
           path: evidence/
 
+  commit-evidence:
+    name: Commit Evidence to Repository
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, security-scan, build-and-push, codeql-analysis]
+    if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Create evidence directories in repo
+        run: |
+          mkdir -p evidence/run
+          mkdir -p evidence/sast
+          mkdir -p evidence/sbom
+          mkdir -p evidence/sca
+          mkdir -p evidence/secrets
+          mkdir -p evidence/signing
+      
+      - name: Download all evidence artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: evidence-artifacts
+      
+      - name: Organize evidence files
+        run: |
+          # Copy from evidence-backend
+          if [ -d "evidence-artifacts/evidence-backend" ]; then
+            cp -r evidence-artifacts/evidence-backend/* evidence/ 2>/dev/null || true
+          fi
+          
+          # Copy from evidence-frontend
+          if [ -d "evidence-artifacts/evidence-frontend" ]; then
+            cp -r evidence-artifacts/evidence-frontend/* evidence/ 2>/dev/null || true
+          fi
+          
+          # Copy from evidence-security
+          if [ -d "evidence-artifacts/evidence-security" ]; then
+            cp -r evidence-artifacts/evidence-security/* evidence/ 2>/dev/null || true
+          fi
+          
+          # Copy from evidence-build
+          if [ -d "evidence-artifacts/evidence-build" ]; then
+            cp -r evidence-artifacts/evidence-build/* evidence/ 2>/dev/null || true
+          fi
+          
+          # Create summary file
+          echo "Pipeline Run Evidence Summary" > evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "================================" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Run ID: ${{ github.run_id }}" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Run Number: ${{ github.run_number }}" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Commit SHA: ${{ github.sha }}" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Branch/Tag: ${{ github.ref }}" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Actor: ${{ github.actor }}" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          echo "Files Generated:" >> evidence/run/run-${{ github.run_id }}-summary.txt
+          find evidence -type f >> evidence/run/run-${{ github.run_id }}-summary.txt
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Commit and push evidence
+        run: |
+          git add evidence/
+          if git diff --staged --quiet; then
+            echo "No evidence changes to commit"
+          else
+            git commit -m "Add evidence from pipeline run ${{ github.run_id }}
+
+            Run Number: ${{ github.run_number }}
+            Event: ${{ github.event_name }}
+            Commit: ${{ github.sha }}
+            Actor: ${{ github.actor }}
+            
+            Evidence includes:
+            - SBOM (Syft/Trivy)
+            - SAST (CodeQL/Gosec/ESLint)
+            - Secret Scan (gitleaks)
+            - SCA (Trivy)
+            - Image Signing (Cosign)
+            - Run Metadata"
+            
+            # Push to the current branch
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+
  
