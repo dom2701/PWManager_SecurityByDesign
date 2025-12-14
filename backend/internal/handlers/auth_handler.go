@@ -332,7 +332,12 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 	}
 
 	// Check if MFA is already enabled
-	existingMFA, _ := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	existingMFA, err := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to check mfa status", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
 	if existingMFA != nil && existingMFA.Enabled {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "MFA is already enabled"})
 		return
