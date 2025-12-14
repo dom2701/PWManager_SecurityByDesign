@@ -19,10 +19,11 @@ export default function ProtectedRoute({ children }) {
           // Fetch CSRF token
           try {
             await fetchCSRFToken()
+            setIsAuthenticated(true)
           } catch (e) {
-            console.warn('Failed to fetch CSRF token', e)
+            console.error('Failed to fetch CSRF token', e)
+            setIsAuthenticated(false)
           }
-          setIsAuthenticated(true)
         } else {
           setIsAuthenticated(false)
         }

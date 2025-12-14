@@ -20,6 +20,11 @@ export function getCSRFToken() {
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`
   
+  // Check for missing CSRF token on state-changing methods
+  if (!csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+    console.warn('Making state-changing request without CSRF token')
+  }
+
   const config = {
     credentials: 'include', // Send cookies with requests
     headers: {
