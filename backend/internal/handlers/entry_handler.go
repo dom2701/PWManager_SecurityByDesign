@@ -143,6 +143,13 @@ func (h *EntryHandler) List(c *gin.Context) {
 		return
 	}
 
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionVaultAccessed,
+		middleware.GetClientIP(c), c.Request.UserAgent(), map[string]interface{}{
+			"vault_id":  vaultID.String(),
+			"operation": "list_entries",
+		})
+
 	entries, err := h.entryRepo.GetByVaultID(c.Request.Context(), vaultID)
 	if err != nil {
 		h.logger.Error("failed to list entries", zap.Error(err))
@@ -202,6 +209,13 @@ func (h *EntryHandler) Get(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
 		return
 	}
+
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionEntryAccessed,
+		middleware.GetClientIP(c), c.Request.UserAgent(), map[string]interface{}{
+			"entry_id": entry.ID.String(),
+			"vault_id": entry.VaultID.String(),
+		})
 
 	c.JSON(http.StatusOK, models.VaultEntryResponse{
 		ID:            entry.ID,
