@@ -49,12 +49,23 @@ export default function VaultPage() {
 
   const clearClipboardNow = useCallback(async () => {
     try {
-      const currentClipboard = await navigator.clipboard.readText()
-      if (currentClipboard === lastCopiedText) {
+      let shouldClear = true
+      try {
+        const currentClipboard = await navigator.clipboard.readText()
+        if (currentClipboard !== lastCopiedText) {
+          shouldClear = false
+        }
+      } catch (readErr) {
+        console.warn('Could not read clipboard to verify content:', readErr)
+        // If we can't read (e.g. permission denied), we proceed to clear
+        // to ensure security, as we can't verify if the user copied something else.
+      }
+
+      if (shouldClear) {
         await navigator.clipboard.writeText('')
       }
     } catch (err) {
-      console.error('Failed to clear clipboard:', err)
+      console.error('Failed to clear clipboard using API:', err)
       // Fallback using execCommand
       // Note: execCommand is deprecated but used here as a fallback for older browsers
       // or contexts where the Clipboard API might fail.
