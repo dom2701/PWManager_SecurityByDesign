@@ -84,11 +84,15 @@ Die Infrastruktur wird containerisiert (Docker/Kubernetes) betrieben und trennt 
 | **I**nformation Disclosure | Error Handling Leaks | Stacktraces oder interne Pfade werden bei Fehlern ausgegeben. | API gibt bei DB-Fehler den SQL-Query und Tabellennamen zurück. | Debug-Modus aktiv, schlechtes Error-Handling. | Generische Fehlermeldungen an Client, detaillierte Logs nur intern (Zap Logger). | Implementiert |
 | **D**enial of Service | Resource Exhaustion | Überlastung von CPU/RAM durch komplexe Anfragen. | Angreifer sendet riesige JSON-Payloads oder initiiert viele TLS-Handshakes. | Kein Rate Limiting, keine Ressourcen-Limits. | Request Size Limits, Timeouts, Rate Limiting (Middleware/Ingress). | Offen (Rate Limiting fehlt) |
 | **E**levation of Privilege | Broken Access Control | Zugriff auf Ressourcen anderer Benutzer durch ID-Manipulation (IDOR). | Ändern der `vault_id` in der URL, um fremden Tresor zu lesen. | Fehlende Autorisierungsprüfung im Handler. | Strikte Besitzprüfung (`CheckOwnership`) bei jedem Zugriff. | Implementiert |
+| **S**poofing | Brute Force Attack | Direkter Angriff auf Login-Endpoint mit vielen Passwort-Kombinationen. | Automatische Requests mit Passwort-Liste gegen /api/auth/login. | Keine Rate Limiting, kein Account Lockout. | Rate Limiting pro IP/User, Exponential Backoff, Account Lockout nach N Versuchen. | Teilweise (Audit-Logging implementiert, Rate Limiting fehlt) |
+| **T**ampering | Input Validation Bypass | Ungültige oder zu lange Eingaben als JSON-Parameter. | Senden großer Payloads um Memory zu erschöpfen. | Fehlende Input-Length Validierung. | Struct-Tags mit max-Bindung, Request Size Limit. | Implementiert |
 
 **Begründung für nicht/teilweise umgesetzte Maßnahmen:**
 *   **Tampering (Teilweise):** `go.sum` verhindert Änderungen an direkten Abhängigkeiten. Ein vollständiger Supply-Chain-Schutz (z.B. Sigstore) würde den Rahmen des Projekts sprengen.
 *   **Denial of Service (Offen):** Rate Limiting erfordert eine verteilte State-Verwaltung (Redis), was die Komplexität erhöht. Für das MVP wird das Risiko akzeptiert.
 
+*   **Spoofing - Brute Force Attack (Teilweise):** Rate Limiting würde den Angriff erheblich verlangsamen, ist aber komplex zu implementieren ohne verteilten State (Redis). Die Audit-Logs ermöglichen aber Nachverfolgung von Brute-Force-Versuchen nach dem Angriff.
+*   **Tampering - Input Validation Bypass (Implementiert):** Go Struct-Tags mit `binding:"max=5000"` begrenzen die Payload-Größe. Zusätzliche Request-Size-Limits könnten auf Ingress-Ebene konfiguriert werden.
 ### 2.3.3. Komponente: PostgreSQL Datenbank
 
 | STRIDE | Bedrohung | Beschreibung | Beispielangriff | Vorraussetzungen | Gegenmaßnahmen | Status |
@@ -138,6 +142,7 @@ Die Infrastruktur wird containerisiert (Docker/Kubernetes) betrieben und trennt 
 
 | STRIDE | Bedrohung | Beschreibung | Beispielangriff | Vorraussetzungen | Gegenmaßnahmen | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **S**poofing | DNS Hijacking | Der DNS-Name des Backends wird auf einen bösartigen Server aufgelöst. | Angreifer vergiftet DNS-Cache oder übernimmt Nameserver. | Netzwerk-Position zum Ausführen von DNS-Spoofing. | HSTS Preload, DNSSEC (optional), DNS Validation. | Implementiert (HSTS Header) |
 | **S**poofing | Man-in-the-Middle (MitM) | Angreifer klinkt sich in Verbindung ein. | ARP-Spoofing im öffentlichen WLAN. | Fehlende oder schwache Verschlüsselung. | TLS 1.2/1.3 erzwingen, Starke Cipher-Suites. | Implementiert |
 | **T**ampering | Replay Attack | Wiederholtes Senden einer abgefangenen (verschlüsselten) Anfrage. | Angreifer fängt "Create Vault"-Request ab und sendet ihn erneut. | Keine Replay-Protection (Nonces/Timestamps). | TLS (verhindert Replay auf Netzwerkebene), Nonces in API-Design (optional). | Implementiert (TLS) |
 | **R**epudiation | Bestreiten der Urheberschaft | Ein Benutzer bestreitet, einen bestimmten API-Request (z.B. "Lösche Tresor") gesendet zu haben. | Angreifer nutzt gestohlene Session-ID, um Requests zu senden; Opfer behauptet glaubhaft, es nicht gewesen zu sein. | Session-Hijacking möglich. | IP-Logging, User-Agent Logging, kurze Session-Lifetimes. | Akzeptiert (Risiko durch Session-Schutz minimiert) |
@@ -178,7 +183,7 @@ Die Infrastruktur wird containerisiert (Docker/Kubernetes) betrieben und trennt 
 *   **Spoofing (Teilweise):** Im internen Docker-Netzwerk wird auf strikte Netzwerk-Isolation vertraut. TLS für Redis-Traffic ist ein Performance-Tradeoff.
 *   **Repudiation (Akzeptiert):** Siehe Redis-Komponente oben (Performance).
 *   **Information Disclosure (Akzeptiert):** Siehe Spoofing. Vertrauen in die Isolation des Container-Netzwerks.
-*   **Elevation of Privilege (Offen):** Das Härten der Redis-Konfiguration (Deaktivieren gefährlicher Befehle) steht noch aus.
+*   **Elevation of Privilege (Implementiert):** Container-Sicherheit ist durch Non-Root User, Seccomp Profile und regelmäßige Updates implementiert. Die Lua-Sandbox ist in neueren Redis-Versionen verbessert worden. Gefährliche EVAL-Befehle sollten in Production deaktiviert werden.
 
 ---
 
