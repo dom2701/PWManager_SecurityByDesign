@@ -61,11 +61,18 @@ export const getCurrentUser = () => {
  * @returns {Promise} CSRF token
  */
 export const fetchCSRFToken = async () => {
-  const response = await api.get('/auth/csrf')
-  if (response && response.csrf_token) {
-    api.setCSRFToken(response.csrf_token)
+  try {
+    const response = await api.get('/auth/csrf')
+    if (response && response.csrf_token) {
+      api.setCSRFToken(response.csrf_token)
+      return response
+    }
+    console.error('CSRF token missing in response:', response)
+    throw new Error('CSRF token missing in response')
+  } catch (err) {
+    console.error('Failed to fetch CSRF token:', err)
+    throw err
   }
-  return response
 }
 
 /**

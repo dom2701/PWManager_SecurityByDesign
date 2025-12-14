@@ -19,12 +19,16 @@ export default function ProtectedRoute({ children }) {
           // Fetch CSRF token
           try {
             await fetchCSRFToken()
-            setIsAuthenticated(true)
+            // Double check if token was actually set
+            const token = await import('../services/api/client').then(m => m.getCSRFToken())
+            if (token) {
+              setIsAuthenticated(true)
+            } else {
+              console.error('CSRF token not set after fetch')
+              setIsAuthenticated(false)
+            }
           } catch (e) {
             console.error('Failed to fetch CSRF token', e)
-            // If we can't get a CSRF token, we can't make state-changing requests.
-            // However, we might still be able to view read-only data.
-            // But for security, it's safer to force a re-login if the session is in a weird state.
             setIsAuthenticated(false)
           }
         } else {

@@ -7,6 +7,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 let csrfToken = null;
 
 export function setCSRFToken(token) {
+  if (!token) {
+    console.warn('Attempted to set empty CSRF token')
+    return
+  }
   csrfToken = token;
 }
 
