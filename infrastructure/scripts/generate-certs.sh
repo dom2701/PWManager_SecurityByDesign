@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-CERT_DIR="infrastructure/certs"
-mkdir -p "$CERT_DIR"
+CERT_DIR="Certificate Authority"
 
-echo "Generating Certificate Authority (CA)..."
+echo "Generating Certificate Authority (CA) in '$CERT_DIR'..."
+
+# Clean up old certificates
+rm -rf "$CERT_DIR"
+mkdir -p "$CERT_DIR"
 
 # 1. Root CA Private Key
 openssl genrsa -out "$CERT_DIR/rootCA.key" 4096

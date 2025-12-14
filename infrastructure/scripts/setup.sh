@@ -21,8 +21,8 @@ chmod +x infrastructure/scripts/generate-certs.sh
 
 # Create TLS secret (dry-run to allow idempotency)
 kubectl create secret tls pwmanager-tls \
-  --cert=infrastructure/certs/server.crt \
-  --key=infrastructure/certs/server.key \
+  --cert="Certificate Authority/server.crt" \
+  --key="Certificate Authority/server.key" \
   -n pwmanager --dry-run=client -o yaml | kubectl apply -f -
 
 # Apply config with substitution
