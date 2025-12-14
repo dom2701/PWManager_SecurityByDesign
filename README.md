@@ -20,7 +20,7 @@ Ein sicherer Online-Passwort-Manager zur zentralen Verwaltung und Verschlüsselu
 - Session-Management mit automatischem Timeout (15 Minuten)
 - Audit-Logging aller sicherheitskritischen Aktionen
 
-### Technologie-Stack
+### Getting Started
 
 **Backend:**
 - Golang
