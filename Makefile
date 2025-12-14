@@ -18,18 +18,13 @@ load-k3s:
 	@echo "Images loaded into k3s."
 
 setup-local: build-local load-k3s
-	@echo "Configuring for local setup (using digests)..."
+	@echo "Configuring for local setup (using latest tag)..."
 	@# Backup the original file
 	@cp infrastructure/03-app.yaml infrastructure/03-app.yaml.bak
-	@# Get digests
-	@BACKEND_DIGEST=$$(docker inspect --format='{{.Id}}' $(BACKEND_IMAGE):latest); \
-	FRONTEND_DIGEST=$$(docker inspect --format='{{.Id}}' $(FRONTEND_IMAGE):latest); \
-	echo "Backend Digest: $$BACKEND_DIGEST"; \
-	echo "Frontend Digest: $$FRONTEND_DIGEST"; \
-	# Modify the file in place
-	sed -i "s|image: $(BACKEND_IMAGE).*|image: $(BACKEND_IMAGE)@$$BACKEND_DIGEST|g" infrastructure/03-app.yaml; \
-	sed -i "s|image: $(FRONTEND_IMAGE).*|image: $(FRONTEND_IMAGE)@$$FRONTEND_DIGEST|g" infrastructure/03-app.yaml; \
-	sed -i "s|imagePullPolicy: .*|imagePullPolicy: IfNotPresent|g" infrastructure/03-app.yaml
+	@# Modify the file in place to use :latest and IfNotPresent
+	@sed -i "s|image: $(BACKEND_IMAGE).*|image: $(BACKEND_IMAGE):latest|g" infrastructure/03-app.yaml
+	@sed -i "s|image: $(FRONTEND_IMAGE).*|image: $(FRONTEND_IMAGE):latest|g" infrastructure/03-app.yaml
+	@sed -i "s|imagePullPolicy: .*|imagePullPolicy: IfNotPresent|g" infrastructure/03-app.yaml
 	@# Run setup
 	@$(MAKE) apply-setup
 	@# Restore the original file
