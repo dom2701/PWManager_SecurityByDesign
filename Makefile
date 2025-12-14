@@ -1,19 +1,47 @@
-.PHONY: setup teardown clean build-local
+.PHONY: setup teardown clean build-local setup-local apply-setup
+
+# Variables
+BACKEND_IMAGE=ghcr.io/dom2701/pwmanager_securitybydesign/backend
+FRONTEND_IMAGE=ghcr.io/dom2701/pwmanager_securitybydesign/frontend
 
 build-local:
 	@echo "Building Docker images locally..."
-	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest ./backend
-	@docker build -t ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest ./frontend
+	@docker build -t $(BACKEND_IMAGE):latest ./backend
+	@docker build -t $(FRONTEND_IMAGE):latest ./frontend
 	@echo "Images built."
 
 load-k3s:
 	@echo "Loading images into k3s..."
 	@# Pipe docker save output directly to k3s import to avoid temporary files
-	@docker save ghcr.io/dom2701/pwmanager_securitybydesign/backend:latest | sudo k3s ctr images import -
-	@docker save ghcr.io/dom2701/pwmanager_securitybydesign/frontend:latest | sudo k3s ctr images import -
+	@docker save $(BACKEND_IMAGE):latest | sudo k3s ctr images import -
+	@docker save $(FRONTEND_IMAGE):latest | sudo k3s ctr images import -
 	@echo "Images loaded into k3s."
 
+setup-local: build-local load-k3s
+	@echo "Configuring for local setup (using digests)..."
+	@# Backup the original file
+	@cp infrastructure/03-app.yaml infrastructure/03-app.yaml.bak
+	@# Get digests
+	@BACKEND_DIGEST=$$(docker inspect --format='{{.Id}}' $(BACKEND_IMAGE):latest); \
+	FRONTEND_DIGEST=$$(docker inspect --format='{{.Id}}' $(FRONTEND_IMAGE):latest); \
+	echo "Backend Digest: $$BACKEND_DIGEST"; \
+	echo "Frontend Digest: $$FRONTEND_DIGEST"; \
+	# Modify the file in place
+	sed -i "s|image: $(BACKEND_IMAGE).*|image: $(BACKEND_IMAGE)@$$BACKEND_DIGEST|g" infrastructure/03-app.yaml; \
+	sed -i "s|image: $(FRONTEND_IMAGE).*|image: $(FRONTEND_IMAGE)@$$FRONTEND_DIGEST|g" infrastructure/03-app.yaml; \
+	sed -i "s|imagePullPolicy: .*|imagePullPolicy: IfNotPresent|g" infrastructure/03-app.yaml
+	@# Run setup
+	@$(MAKE) apply-setup
+	@# Restore the original file
+	@mv infrastructure/03-app.yaml.bak infrastructure/03-app.yaml
+	@echo "Restored infrastructure/03-app.yaml to original state."
+
 setup:
+	@echo "Configuring for remote setup (using GHCR)..."
+	@# Ensure we are using the file as is (which should contain the fixed digests)
+	@$(MAKE) apply-setup
+
+apply-setup:
 	@echo "Setting up PWManager..."
 	@# Check connection
 	@kubectl cluster-info >/dev/null 2>&1 || (echo "Error: Cannot connect to Kubernetes cluster. Please check your kubeconfig." && exit 1)
