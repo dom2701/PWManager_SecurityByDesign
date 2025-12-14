@@ -1,7 +1,7 @@
 Generating ephemeral keys...
 Retrieving signed certificate...
 Successfully verified SCT...
-WARNING: Image reference ghcr.io/dom2701/pwmanager_securitybydesign/backend:dbdb53bea7335f609105167bde8f588fdd725a8f uses a tag, not a digest, to identify the image to sign.
+WARNING: Image reference ghcr.io/dom2701/pwmanager_securitybydesign/backend:8b4203cb4fe961bb5b36aa1ee952426d0bb0ab86 uses a tag, not a digest, to identify the image to sign.
     This can lead you to sign a different image than the intended one. Please use a
     digest (example.com/ubuntu@sha256:abc123...) rather than tag
     (example.com/ubuntu:latest) for the input to cosign. The ability to refer to
@@ -14,7 +14,7 @@ WARNING: Image reference ghcr.io/dom2701/pwmanager_securitybydesign/backend:dbdb
 	This information will be used for signing this artifact and will be stored in public transparency logs and cannot be removed later, and is subject to the Immutable Record notice at https://lfprojects.org/policies/hosted-project-tools-immutable-records/.
 
 By typing 'y', you attest that (1) you are not submitting the personal data of any other person; and (2) you understand and agree to the statement and the Agreement terms at the URLs listed above.
-tlog entry created with index: 763992180
+tlog entry created with index: 763994629
 Pushing signature to: ghcr.io/dom2701/pwmanager_securitybydesign/backend
 Generating ephemeral keys...
 Retrieving signed certificate...
@@ -32,5 +32,5 @@ WARNING: Image reference ghcr.io/dom2701/pwmanager_securitybydesign/backend:v1.0
 	This information will be used for signing this artifact and will be stored in public transparency logs and cannot be removed later, and is subject to the Immutable Record notice at https://lfprojects.org/policies/hosted-project-tools-immutable-records/.
 
 By typing 'y', you attest that (1) you are not submitting the personal data of any other person; and (2) you understand and agree to the statement and the Agreement terms at the URLs listed above.
-tlog entry created with index: 763992192
+tlog entry created with index: 763994633
 Pushing signature to: ghcr.io/dom2701/pwmanager_securitybydesign/backend
