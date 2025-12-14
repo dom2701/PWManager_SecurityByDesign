@@ -54,7 +54,8 @@ type SessionConfig struct {
 
 // RateLimitConfig holds rate limiting configuration
 type RateLimitConfig struct {
-	RequestsPerMinute int
+	RequestsPerMinute     int
+	AuthRequestsPerMinute int
 }
 
 // CORSConfig holds CORS configuration
@@ -109,7 +110,8 @@ func Load() (*Config, error) {
 			IdleTimeout: getEnvAsInt("SESSION_IDLE_TIMEOUT", 1800),
 		},
 		RateLimit: RateLimitConfig{
-			RequestsPerMinute: getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 60),
+			RequestsPerMinute:     getEnvAsInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 60),
+			AuthRequestsPerMinute: getEnvAsInt("RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE", 5),
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),

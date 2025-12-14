@@ -146,6 +146,7 @@ func main() {
 	router.Use(middleware.RecoveryMiddleware(logger))
 	router.Use(middleware.LoggingMiddleware(logger))
 	router.Use(middleware.CORSMiddleware(cfg.CORS.AllowedOrigins))
+	router.Use(middleware.RateLimitMiddleware(redisClient, cfg.RateLimit.RequestsPerMinute, "limiter_global"))
 
 	// Swagger Documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -160,6 +161,7 @@ func main() {
 	{
 		// Auth routes (public)
 		auth := api.Group("/auth")
+		auth.Use(middleware.StrictRateLimitMiddleware(redisClient, cfg.RateLimit.AuthRequestsPerMinute, "limiter_auth"))
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
