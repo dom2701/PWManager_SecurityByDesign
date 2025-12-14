@@ -185,6 +185,13 @@ func (h *VaultHandler) Get(c *gin.Context) {
 		return
 	}
 
+	// Audit log
+	_ = h.auditRepo.Create(c.Request.Context(), &userID, models.ActionVaultAccessed,
+		middleware.GetClientIP(c), c.Request.UserAgent(), map[string]interface{}{
+			"vault_id":   vault.ID.String(),
+			"vault_name": vault.Name,
+		})
+
 	// Count entries for this vault
 	entryCount, err := h.entryRepo.CountByVaultID(c.Request.Context(), vaultID)
 	if err != nil {

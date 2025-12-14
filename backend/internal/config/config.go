@@ -108,7 +108,7 @@ func Load() (*Config, error) {
 		},
 		Session: SessionConfig{
 			MaxAge:        getEnvAsInt("SESSION_MAX_AGE", 3600),
-			IdleTimeout:   getEnvAsInt("SESSION_IDLE_TIMEOUT", 1800),
+			IdleTimeout:   getEnvAsInt("SESSION_IDLE_TIMEOUT", 900),
 			SecureCookies: getEnvAsBool("SECURE_COOKIES", true),
 		},
 		RateLimit: RateLimitConfig{
