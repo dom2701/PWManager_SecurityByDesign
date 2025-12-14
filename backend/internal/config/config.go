@@ -186,10 +186,12 @@ func (c *Config) IsProduction() bool {
 func getEnv(key, defaultValue string) string {
 	// Check for _FILE variant
 	if filePath := os.Getenv(key + "_FILE"); filePath != "" {
-		if content, err := os.ReadFile(filePath); err == nil {
+		content, err := os.ReadFile(filePath)
+		if err == nil {
 			// Trim whitespace (newlines) that might be in the file
 			return string(bytes.TrimSpace(content))
 		}
+		fmt.Printf("Failed to read file %s for env %s: %v\n", filePath, key, err)
 	}
 
 	if value := os.Getenv(key); value != "" {
