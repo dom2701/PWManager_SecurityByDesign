@@ -17,11 +17,10 @@ spec:
         - 192.168.42.140
       secretName: pwmanager-tls
   rules:
-    # We use a wildcard or specific domain. For local dev, we can use localhost or a custom domain in /etc/hosts
-    # If host is omitted, it matches any host header
-    - http:
+    # Rule for localhost
+    - host: localhost
+      http:
         paths:
-          # Route /api requests to the backend service
           - path: /api
             pathType: Prefix
             backend:
@@ -29,7 +28,24 @@ spec:
                 name: backend
                 port:
                   number: 8080
-          # Route all other requests to the frontend service
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+    # Rule for IP address
+    - host: "192.168.42.140"
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
