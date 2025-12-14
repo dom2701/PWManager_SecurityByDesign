@@ -118,10 +118,12 @@ func printUsage() {
 func getEnv(key string) string {
 	// Check for _FILE variant
 	if filePath := os.Getenv(key + "_FILE"); filePath != "" {
-		if content, err := os.ReadFile(filePath); err == nil {
+		content, err := os.ReadFile(filePath)
+		if err == nil {
 			// Trim whitespace (newlines) that might be in the file
 			return string(bytes.TrimSpace(content))
 		}
+		log.Printf("Failed to read file %s for env %s: %v", filePath, key, err)
 	}
 
 	if value := os.Getenv(key); value != "" {

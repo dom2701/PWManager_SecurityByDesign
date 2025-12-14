@@ -19,10 +19,18 @@ export default function ProtectedRoute({ children }) {
           // Fetch CSRF token
           try {
             await fetchCSRFToken()
+            // Double check if token was actually set
+            const token = await import('../services/api/client').then(m => m.getCSRFToken())
+            if (token) {
+              setIsAuthenticated(true)
+            } else {
+              console.error('CSRF token not set after fetch')
+              setIsAuthenticated(false)
+            }
           } catch (e) {
-            console.warn('Failed to fetch CSRF token', e)
+            console.error('Failed to fetch CSRF token', e)
+            setIsAuthenticated(false)
           }
-          setIsAuthenticated(true)
         } else {
           setIsAuthenticated(false)
         }

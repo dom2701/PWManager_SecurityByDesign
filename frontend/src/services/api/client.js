@@ -7,6 +7,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 let csrfToken = null;
 
 export function setCSRFToken(token) {
+  if (!token) {
+    console.warn('Attempted to set empty CSRF token')
+    return
+  }
   csrfToken = token;
 }
 
@@ -20,13 +24,23 @@ export function getCSRFToken() {
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`
   
+  // Check for missing CSRF token on state-changing methods
+  if (!csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+    console.warn('Making state-changing request without CSRF token')
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
+
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken
+  }
+
   const config = {
     credentials: 'include', // Send cookies with requests
-    headers: {
-      'Content-Type': 'application/json',
-      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-      ...options.headers,
-    },
+    headers,
     ...options,
   }
 
