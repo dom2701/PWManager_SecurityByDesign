@@ -1,0 +1,24 @@
+Pipeline Run Evidence Summary
+================================
+Run ID: 20215082570
+Run Number: 140
+Timestamp: 2025-12-14T22:33:07Z
+Commit SHA: 8d8283a5cf6a1a82589be5a2338a482303607b0a
+Branch/Tag: refs/heads/develop
+Actor: dom2701
+
+Files Generated:
+evidence/sast/golangci-lint.xml
+evidence/sast/frontend-eslint.json
+evidence/sast/gosec-results.sarif
+evidence/sast/checkov-report.sarif
+evidence/run/run-20215082570-summary.txt
+evidence/run/frontend-lint.log
+evidence/sca/trivy-sca-report.txt
+evidence/sca/trivy-image-backend.txt
+evidence/sca/trivy-image-frontend.txt
+evidence/sbom/sbom.cdx.json
+evidence/signing/frontend-sign.log
+evidence/signing/backend-verify.json
+evidence/signing/backend-sign.log
+evidence/signing/frontend-verify.json
