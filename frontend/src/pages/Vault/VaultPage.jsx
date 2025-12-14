@@ -32,6 +32,7 @@ export default function VaultPage() {
 
   const [clipboardCountdown, setClipboardCountdown] = useState(0)
   const [lastCopiedText, setLastCopiedText] = useState(null)
+  const [pendingClear, setPendingClear] = useState(false)
 
   // Clipboard countdown effect
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function VaultPage() {
   }, [clipboardCountdown])
 
   const clearClipboardNow = useCallback(async () => {
+    let success = false
     try {
       let shouldClear = true
       try {
@@ -63,12 +65,14 @@ export default function VaultPage() {
 
       if (shouldClear) {
         await navigator.clipboard.writeText('')
+        success = true
+      } else {
+        // Content changed by user, so we consider it "cleared" (or at least we shouldn't overwrite)
+        success = true
       }
     } catch (err) {
       console.error('Failed to clear clipboard using API:', err)
       // Fallback using execCommand
-      // Note: execCommand is deprecated but used here as a fallback for older browsers
-      // or contexts where the Clipboard API might fail.
       try {
         const textArea = document.createElement("textarea")
         textArea.value = ""
@@ -77,15 +81,37 @@ export default function VaultPage() {
         document.body.appendChild(textArea)
         textArea.focus()
         textArea.select()
-        document.execCommand('copy')
+        const execSuccess = document.execCommand('copy')
         document.body.removeChild(textArea)
+        if (execSuccess) success = true
       } catch (fallbackErr) {
         console.error('Fallback failed:', fallbackErr)
       }
     }
-    setLastCopiedText(null)
-    setClipboardCountdown(0)
+
+    if (success) {
+      setLastCopiedText(null)
+      setClipboardCountdown(0)
+      setPendingClear(false)
+    } else {
+      // If failed (likely due to background tab restrictions), mark as pending
+      // to retry when window regains focus
+      console.warn('Clipboard clear failed - scheduling retry on focus')
+      setPendingClear(true)
+      setClipboardCountdown(0)
+    }
   }, [lastCopiedText])
+
+  // Retry clearing when window regains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (pendingClear) {
+        clearClipboardNow()
+      }
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [pendingClear, clearClipboardNow])
 
   // Handle clipboard clearing
   useEffect(() => {
@@ -254,14 +280,47 @@ export default function VaultPage() {
   }
 
   // Copy to clipboard
-  function copyToClipboard(text, entryId) {
-    navigator.clipboard.writeText(text)
-    setCopiedId(entryId)
-    setTimeout(() => setCopiedId(null), 2000)
-    
-    // Reset countdown
-    setClipboardCountdown(CLIPBOARD_CLEAR_TIMEOUT)
-    setLastCopiedText(text)
+  async function copyToClipboard(text, entryId) {
+    try {
+      // Try to request permission implicitly by reading (if possible)
+      // This is a best-effort to "prime" the permission for later clearing
+      try {
+        await navigator.permissions.query({ name: 'clipboard-write' })
+      } catch (e) {
+        // Ignore permission query errors
+      }
+
+      await navigator.clipboard.writeText(text)
+      setCopiedId(entryId)
+      setTimeout(() => setCopiedId(null), 2000)
+      
+      // Reset countdown
+      setClipboardCountdown(CLIPBOARD_CLEAR_TIMEOUT)
+      setLastCopiedText(text)
+      setPendingClear(false) // Reset pending state on new copy
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      // Fallback
+      try {
+        const textArea = document.createElement("textarea")
+        textArea.value = text
+        textArea.style.position = "fixed"
+        textArea.style.left = "-9999px"
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        setCopiedId(entryId)
+        setTimeout(() => setCopiedId(null), 2000)
+        setClipboardCountdown(CLIPBOARD_CLEAR_TIMEOUT)
+        setLastCopiedText(text)
+        setPendingClear(false)
+      } catch (fbErr) {
+        console.error('Copy fallback failed:', fbErr)
+      }
+    }
   }
 
   // Toggle password visibility
