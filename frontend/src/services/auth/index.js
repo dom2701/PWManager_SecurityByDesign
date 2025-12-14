@@ -57,6 +57,18 @@ export const getCurrentUser = () => {
 }
 
 /**
+ * Fetch CSRF token
+ * @returns {Promise} CSRF token
+ */
+export const fetchCSRFToken = async () => {
+  const response = await api.get('/auth/csrf')
+  if (response && response.csrf_token) {
+    api.setCSRFToken(response.csrf_token)
+  }
+  return response
+}
+
+/**
  * Change password
  * @param {string} currentPassword - Current password
  * @param {string} newPassword - New password
@@ -74,5 +86,6 @@ export default {
   registerUser,
   logoutUser,
   getCurrentUser,
+  fetchCSRFToken,
   changePassword,
 }

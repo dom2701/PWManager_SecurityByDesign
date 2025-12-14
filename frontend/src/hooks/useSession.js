@@ -1,5 +1,6 @@
 import { logoutUser as logoutUserAPI } from '../services/auth'
 import { clearAllMasterPasswords } from '../utils/masterPassword'
+import { setCSRFToken } from '../services/api/client'
 
 const INACTIVITY_MS = 15 * 60 * 1000 // 15 minutes
 
@@ -72,6 +73,7 @@ export function clearSession() {
   try { localStorage.removeItem('authToken') } catch { /* ignore */ }
   try { sessionStorage.clear() } catch { /* ignore */ }
   clearAllMasterPasswords()
+  setCSRFToken(null)
 }
 
 export function useSession() {

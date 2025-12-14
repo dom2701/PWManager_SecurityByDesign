@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { getCurrentUser } from '../services/auth'
+import { getCurrentUser, fetchCSRFToken } from '../services/auth'
 
 export default function ProtectedRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null) // null = loading
@@ -16,6 +16,12 @@ export default function ProtectedRoute({ children }) {
         // Verify session by calling /auth/me endpoint
         const user = await getCurrentUser()
         if (user) {
+          // Fetch CSRF token
+          try {
+            await fetchCSRFToken()
+          } catch (e) {
+            console.warn('Failed to fetch CSRF token', e)
+          }
           setIsAuthenticated(true)
         } else {
           setIsAuthenticated(false)

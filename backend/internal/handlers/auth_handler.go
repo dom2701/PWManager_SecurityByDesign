@@ -204,6 +204,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Set session cookie
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(
 		"session_id",
 		session.ID,
@@ -224,8 +225,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "login successful",
-		"user":    userResp,
+		"message":    "login successful",
+		"user":       userResp,
+		"csrf_token": session.CSRFToken,
 	})
 }
 
@@ -330,7 +332,12 @@ func (h *AuthHandler) SetupMFA(c *gin.Context) {
 	}
 
 	// Check if MFA is already enabled
-	existingMFA, _ := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	existingMFA, err := h.mfaRepo.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("failed to check mfa status", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
 	if existingMFA != nil && existingMFA.Enabled {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "MFA is already enabled"})
 		return
@@ -602,4 +609,21 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		middleware.GetClientIP(c), c.Request.UserAgent(), nil)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+// GetCSRFToken returns the CSRF token for the current session
+// @Summary      Get CSRF token
+// @Description  Get the CSRF token for the current session
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Router       /auth/csrf [get]
+func (h *AuthHandler) GetCSRFToken(c *gin.Context) {
+	token, exists := c.Get("csrf_token")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 }
