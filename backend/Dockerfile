@@ -34,7 +34,7 @@ COPY . .
 CMD ["go", "run", "cmd/api/main.go"]
 
 # Stage 2: Runtime stage
-FROM alpine:latest
+FROM alpine:3.23.0
 
 # Install ca-certificates for HTTPS requests
 RUN apk --no-cache add ca-certificates
