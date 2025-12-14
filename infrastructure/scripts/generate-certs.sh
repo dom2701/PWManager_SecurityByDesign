@@ -1,12 +1,16 @@
 #!/bin/bash
 set -e
 
-CERT_DIR="Certificate Authority"
+CERT_DIR="CertificateAuthority"
+
+# Check if certificates already exist
+if [ -f "$CERT_DIR/rootCA.pem" ] && [ -f "$CERT_DIR/server.crt" ] && [ -f "$CERT_DIR/server.key" ]; then
+  echo "Certificates already exist in '$CERT_DIR'. Skipping generation."
+  exit 0
+fi
 
 echo "Generating Certificate Authority (CA) in '$CERT_DIR'..."
 
-# Clean up old certificates
-rm -rf "$CERT_DIR"
 mkdir -p "$CERT_DIR"
 
 # 1. Root CA Private Key
