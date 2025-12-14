@@ -32,7 +32,7 @@ func (r *MFARepository) Create(ctx context.Context, mfa *models.MFASecret) error
 	if err != nil {
 		return fmt.Errorf("failed to create mfa secret: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	if rows.Next() {
 		if err := rows.Scan(&mfa.ID, &mfa.CreatedAt, &mfa.UpdatedAt); err != nil {

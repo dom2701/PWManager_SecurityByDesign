@@ -86,7 +86,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to connect to database after multiple retries", zap.Error(err))
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// Test database connection
 	if err := db.Ping(); err != nil {
@@ -100,7 +100,7 @@ func main() {
 		logger.Fatal("Failed to parse Redis URL", zap.Error(err))
 	}
 	redisClient := redis.NewClient(redisOpts)
-	defer redisClient.Close()
+	defer func() { _ = redisClient.Close() }()
 
 	// Test Redis connection
 	ctx := context.Background()

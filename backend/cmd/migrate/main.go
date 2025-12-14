@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create migrate instance: %v", err)
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 
 	// Get command from arguments
 	if len(os.Args) < 2 {

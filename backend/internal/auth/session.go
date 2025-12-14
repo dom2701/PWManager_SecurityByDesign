@@ -85,6 +85,14 @@ func (sm *SessionManager) GetSession(ctx context.Context, sessionID string) (*Se
 
 	// Get session data from Redis
 	data, err := sm.client.HGetAll(ctx, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve session: %w", err)
+	}
+
+	if len(data) == 0 {
+		return nil, fmt.Errorf("session not found")
+	}
+
 	// Parse session data
 	userID, err := uuid.Parse(data["user_id"])
 	if err != nil {
