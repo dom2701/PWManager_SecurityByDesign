@@ -48,6 +48,15 @@ Die vollständige Dokumentation befindet sich im `docs/` Ordner.
 - [Security Requirements](docs/SecurityRequirements.md)
 - [K3s Setup Guide](docs/K3S_SETUP.md)
 
+### Lokale Dokumentation starten
+
+Um die Dokumentation lokal zu starten, führen Sie folgende Befehle aus:
+
+```bash
+pip install -r docs/config/requirements.txt
+cd docs/config && mkdocs serve
+```
+
 ### Getting Started
 
 #### Voraussetzungen
@@ -69,10 +78,3 @@ make setup
 
 Dieser Befehl lädt die Docker-Images herunter und wendet die Kubernetes-Manifeste an.
 
-**Dokumentation lokal starten:**
-
-```bash
-make docs-serve
-```
-
-Die Dokumentation ist dann unter `http://127.0.0.1:8000` erreichbar.
