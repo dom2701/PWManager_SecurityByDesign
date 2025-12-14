@@ -7,6 +7,8 @@ metadata:
     # Enable TLS (Traefik will use a default self-signed cert if no secret is provided)
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
+    # Enable HSTS via Middleware
+    traefik.ingress.kubernetes.io/router.middlewares: pwmanager-hsts-headers@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
@@ -30,3 +32,17 @@ spec:
                 name: frontend
                 port:
                   number: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: hsts-headers
+  namespace: pwmanager
+spec:
+  headers:
+    # HSTS Configuration (max-age=31536000 seconds = 1 year)
+    forceSTSHeader: true
+    stsSeconds: 31536000
+    stsIncludeSubdomains: true
+    stsPreload: true
+
