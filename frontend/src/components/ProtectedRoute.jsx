@@ -22,6 +22,9 @@ export default function ProtectedRoute({ children }) {
             setIsAuthenticated(true)
           } catch (e) {
             console.error('Failed to fetch CSRF token', e)
+            // If we can't get a CSRF token, we can't make state-changing requests.
+            // However, we might still be able to view read-only data.
+            // But for security, it's safer to force a re-login if the session is in a weird state.
             setIsAuthenticated(false)
           }
         } else {

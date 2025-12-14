@@ -25,13 +25,18 @@ async function apiCall(endpoint, options = {}) {
     console.warn('Making state-changing request without CSRF token')
   }
 
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
+
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken
+  }
+
   const config = {
     credentials: 'include', // Send cookies with requests
-    headers: {
-      'Content-Type': 'application/json',
-      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-      ...options.headers,
-    },
+    headers,
     ...options,
   }
 
