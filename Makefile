@@ -1,8 +1,19 @@
-.PHONY: setup teardown clean build-local setup-local apply-setup
+.PHONY: setup teardown clean build-local setup-local apply-setup docs-serve
 
 # Variables
 BACKEND_IMAGE=ghcr.io/dom2701/pwmanager_securitybydesign/backend
 FRONTEND_IMAGE=ghcr.io/dom2701/pwmanager_securitybydesign/frontend
+
+docs-serve:
+	@echo "Starting MkDocs server..."
+	@pip install -r docs/config/requirements.txt
+	@cd docs/config && mkdocs serve
+
+docs-build:
+	@echo "Building MkDocs site..."
+	@pip install -r docs/config/requirements.txt
+	@cd docs/config && mkdocs build -d ../../site
+	@echo "Build complete. Site is in 'site/' directory."
 
 build-local:
 	@echo "Building Docker images locally..."

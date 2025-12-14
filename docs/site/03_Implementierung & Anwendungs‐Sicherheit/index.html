@@ -1,0 +1,915 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Dokumentation für den Password Manager">
+      
+      
+        <meta name="author" content="Thgagi, dom2701">
+      
+      
+      
+        <link rel="prev" href="../SecurityRequirements/">
+      
+      
+        <link rel="next" href="../04_Deployment_CI_CD/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>Implementierung - PWManager SecurityByDesign</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#3-implementierung-und-anwendungs-sicherheit" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="PWManager SecurityByDesign" class="md-header__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PWManager SecurityByDesign
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Implementierung
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Projektübersicht
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../02_ThreatModeling/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Threat Modeling
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../SecurityRequirements/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security Requirements
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementierung
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_Deployment_CI_CD/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Deployment & CI/CD
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../K3S_SETUP/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  K3s Setup
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../05_Lessons_Learned/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Lessons Learned
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PWManager SecurityByDesign" class="md-nav__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PWManager SecurityByDesign
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Projektübersicht
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_ThreatModeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Threat Modeling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SecurityRequirements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Implementierung
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementierung
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#31-erklarung-der-anwendung-mit-allen-sicherheitsfeatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Erklärung der Anwendung mit allen Sicherheitsfeatures
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1. Erklärung der Anwendung mit allen Sicherheitsfeatures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#311-backend-secure-coding-app-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.1. Backend – Secure Coding &amp; App-Security
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1.1. Backend – Secure Coding &amp; App-Security">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#3111-authentifizierung-und-autorisierung" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.1.1. Authentifizierung und Autorisierung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3112-daten-und-protokollsicherheit" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.1.2. Daten- und Protokollsicherheit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3113-secret-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.1.3. Secret-Management
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#312-frontend-secure-coding-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.2. Frontend – Secure Coding &amp; Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1.2. Frontend – Secure Coding &amp; Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#3121-schutz-vor-web-angriffen" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.2.1. Schutz vor Web-Angriffen
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3122-daten-und-sitzungssicherheit" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.2.2. Daten- und Sitzungssicherheit
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-erklarung-aller-nicht-sicheren-parts-begrundung" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Erklärung aller nicht-sicheren Parts &amp; Begründung
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_Deployment_CI_CD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment & CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../K3S_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    K3s Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_Lessons_Learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lessons Learned
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="3-implementierung-und-anwendungs-sicherheit">3. Implementierung und Anwendungs-Sicherheit<a class="headerlink" href="#3-implementierung-und-anwendungs-sicherheit" title="Permanent link">&para;</a></h1>
+<h2 id="31-erklarung-der-anwendung-mit-allen-sicherheitsfeatures">3.1. Erklärung der Anwendung mit allen Sicherheitsfeatures<a class="headerlink" href="#31-erklarung-der-anwendung-mit-allen-sicherheitsfeatures" title="Permanent link">&para;</a></h2>
+<h3 id="311-backend-secure-coding-app-security">3.1.1. Backend – Secure Coding &amp; App-Security<a class="headerlink" href="#311-backend-secure-coding-app-security" title="Permanent link">&para;</a></h3>
+<h4 id="3111-authentifizierung-und-autorisierung">3.1.1.1. Authentifizierung und Autorisierung<a class="headerlink" href="#3111-authentifizierung-und-autorisierung" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>3.1.1.1.1. Implementierung der gültigen Anmeldung</strong>
+    Der Anmeldeprozess wird im <code>AuthHandler.Login</code> gesteuert. Zunächst wird die Existenz des Benutzers über <code>userRepo.GetByEmail</code> geprüft. Um "User Enumeration" zu verhindern, wird bei nicht vorhandenem Benutzer lediglich ein interner Audit-Log (<code>user_not_found</code>) erstellt, dem Client jedoch eine generische Fehlermeldung zurückgegeben.
+    Die Passwortüberprüfung erfolgt mittels <strong>Argon2id</strong> (<code>crypto.VerifyPassword</code>). Erst nach erfolgreicher Validierung des primären Faktors wird der Status der Multi-Faktor-Authentifizierung (MFA) geprüft.
+    Bei erfolgreicher Authentifizierung generiert der <code>SessionManager</code> mittels <code>crypto/rand</code> eine kryptografisch sichere Session-ID. Diese wird zusammen mit Metadaten (User-ID, Erstellungszeitpunkt, Last-Seen) in einem <strong>Redis</strong>-Store (Hash-Map) abgelegt. Die Session-ID wird anschließend als <code>HttpOnly</code>-Cookie an den Client übermittelt.</p>
+</li>
+<li>
+<p><strong>3.1.1.1.2. Autorisierungsstrategie (RBAC, ABAC)</strong>
+    Die Anwendung implementiert eine strikte <strong>Resource-Based Access Control</strong>.</p>
+<ul>
+<li><strong>Authentifizierung:</strong> Die <code>AuthMiddleware</code> extrahiert die Session-ID aus dem Cookie und validiert deren Existenz und Gültigkeit (Timeout) direkt gegen den Redis-Store (<code>sessionManager.GetSession</code>).</li>
+<li><strong>Autorisierung:</strong> In den Handlern (z.B. <code>VaultHandler</code>, <code>EntryHandler</code>) findet eine explizite Besitzprüfung statt. Methoden wie <code>vaultRepo.CheckOwnership</code> stellen sicher, dass Operationen nur auf Ressourcen ausgeführt werden können, die der authentifizierten <code>UserID</code> zugeordnet sind. Es existieren keine globalen Admin-Rollen oder privilegierten Zugriffe im Applikationscode ("Least Privilege").</li>
+</ul>
+</li>
+<li>
+<p><strong>3.1.1.1.3. Umsetzung von MFA</strong>
+    Die Zwei-Faktor-Authentifizierung basiert auf dem <strong>TOTP</strong>-Standard (Time-based One-Time Password) und nutzt die Bibliothek <code>github.com/pquerna/otp</code>.</p>
+<ul>
+<li><strong>Speicherung:</strong> Das TOTP-Secret wird bei der Einrichtung generiert und <strong>verschlüsselt</strong> (AES-GCM) in der Datenbanktabelle <code>mfa_secrets</code> abgelegt.</li>
+<li><strong>Verifizierung:</strong> Bei der Anmeldung entschlüsselt das Backend das Secret temporär im Arbeitsspeicher unter Verwendung des <code>MasterEncryptionKey</code> und validiert den vom Benutzer eingegebenen 6-stelligen Code mittels <code>totp.Validate</code>.</li>
+</ul>
+</li>
+</ul>
+<h4 id="3112-daten-und-protokollsicherheit">3.1.1.2. Daten- und Protokollsicherheit<a class="headerlink" href="#3112-daten-und-protokollsicherheit" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>3.1.1.2.1. TLS-Readiness</strong>
+    Der Go-Server ist für native TLS-Terminierung vorbereitet. In der <code>main.go</code> wird die Konfiguration <code>TLS.Enabled</code> ausgewertet. Ist diese aktiv, startet der <code>http.Server</code> mittels <code>ListenAndServeTLS</code> und lädt das Zertifikat sowie den privaten Schlüssel von den konfigurierten Pfaden (<code>CertPath</code>, <code>KeyPath</code>). Dies erlaubt den sicheren Betrieb auch ohne vorgeschalteten Reverse-Proxy.</p>
+</li>
+<li>
+<p><strong>3.1.1.2.2. Eingabevalidierung und Schutz vor Injections</strong></p>
+<ul>
+<li><strong>Deklarative Validierung:</strong> Das <code>gin</code>-Framework nutzt Struct-Tags für die Validierung eingehender JSON-Payloads. Beispiele sind <code>binding:"required,email"</code> für E-Mail-Adressen oder <code>min=12,max=128</code> für Passwörter.</li>
+<li><strong>Typsicherheit &amp; Formatprüfung:</strong> Kritische Parameter wie kryptografische Salts oder Nonces werden explizit auf ihr Hex-Format und die korrekte Byte-Länge geprüft (z.B. 32 Bytes für Salts, 12 Bytes für Nonces), bevor sie verarbeitet werden.</li>
+<li><strong>SQL-Injection Schutz:</strong> Die Datenbankinteraktion erfolgt über die Bibliothek <code>sqlx</code>. Alle SQL-Abfragen nutzen parametrisierte Queries (Prepared Statements mit <code>$1</code>, <code>$2</code> Platzhaltern), wodurch SQL-Injection systembedingt ausgeschlossen wird.</li>
+</ul>
+</li>
+<li>
+<p><strong>3.1.1.2.3. Kryptografie</strong>
+    Die Anwendung setzt auf moderne, von der Industrie anerkannte Algorithmen:</p>
+<ul>
+<li><strong>Passwort-Hashing:</strong> Benutzerpasswörter werden ausschließlich als <strong>Argon2id</strong>-Hashes gespeichert. Die Parameter sind konservativ gewählt: 64 MB Memory, 3 Iterationen, 4 Parallelism Threads, 16 Byte Salt.</li>
+<li><strong>Serverseitige Verschlüsselung:</strong> Sensible Systemdaten (wie MFA-Secrets) werden mit <strong>AES-GCM</strong> (256-Bit Key) verschlüsselt.</li>
+<li><strong>Clientseitige Verschlüsselung (Zero-Knowledge):</strong> Tresor-Einträge werden bereits im Browser verschlüsselt. Hierfür wird aus dem Master-Passwort und dem Vault-Salt mittels <strong>PBKDF2</strong> (SHA-256, <strong>600.000 Iterationen</strong>) ein Schlüssel abgeleitet. Die eigentliche Datenverschlüsselung erfolgt ebenfalls via <strong>AES-GCM</strong>. Das Backend speichert nur die verschlüsselten Blobs (<code>EncryptedData</code>) und Nonces.</li>
+</ul>
+</li>
+<li>
+<p><strong>3.1.1.2.4. Saubere Fehlerbehandlung</strong>
+    Um "Information Disclosure" zu vermeiden, implementiert das Backend eine zweistufige Fehlerbehandlung:</p>
+<ul>
+<li><strong>Intern:</strong> Technische Details (Stacktraces, SQL-Fehler) werden strukturiert mit dem <code>zap</code>-Logger (Uber) erfasst.</li>
+<li><strong>Extern:</strong> Die API antwortet stets mit generischen HTTP-Statuscodes und Nachrichten (z.B. 500 "internal server error", 401 "invalid credentials"), die keine Rückschlüsse auf die interne Architektur oder den genauen Fehlergrund zulassen.</li>
+</ul>
+</li>
+</ul>
+<h4 id="3113-secret-management">3.1.1.3. Secret-Management<a class="headerlink" href="#3113-secret-management" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>3.1.1.3.1. Maßnahmen zur Secret-Hygiene</strong>
+    Der Quellcode ist frei von hartcodierten Geheimnissen. Alle sensiblen Parameter (Datenbank-Credentials, Redis-URL, Session-Secrets, Master-Encryption-Key) werden zur Laufzeit über Umgebungsvariablen (<code>.env</code> Datei oder Container-Environment) mittels <code>godotenv</code> geladen.</p>
+</li>
+<li>
+<p><strong>3.1.1.3.2. Verwaltung von Secrets zur Laufzeit</strong>
+    Die Konfiguration wird beim Start der Anwendung einmalig in eine zentrale <code>Config</code>-Struktur geparst. Der Zugriff auf kritische Schlüssel (wie den <code>EncryptionKey</code> für MFA) ist auf die Komponenten beschränkt, die diese zwingend benötigen (<code>AuthHandler</code>), und erfolgt rein im Arbeitsspeicher.</p>
+</li>
+</ul>
+<hr />
+<h3 id="312-frontend-secure-coding-features">3.1.2. Frontend – Secure Coding &amp; Features<a class="headerlink" href="#312-frontend-secure-coding-features" title="Permanent link">&para;</a></h3>
+<h4 id="3121-schutz-vor-web-angriffen">3.1.2.1. Schutz vor Web-Angriffen<a class="headerlink" href="#3121-schutz-vor-web-angriffen" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>3.1.2.1.1. Schutzmechanismen gegen XSS</strong>
+    Das Frontend wurde mit <strong>React</strong> entwickelt. Durch das automatische Escaping von Werten in JSX-Komponenten wird Cross-Site-Scripting (XSS) standardmäßig unterbunden. Auf die Nutzung von <code>dangerouslySetInnerHTML</code> wurde im gesamten Projekt verzichtet.</p>
+</li>
+<li>
+<p><strong>3.1.2.1.2. Schutzmechanismen gegen CSRF</strong></p>
+<ul>
+<li><strong>Cookie-Attribute:</strong> Session-Cookies werden mit dem <code>HttpOnly</code>-Flag gesetzt. Das <code>Secure</code>-Flag ist konfigurierbar (für Produktion vorgesehen).</li>
+<li><strong>CORS-Policy:</strong> Die <code>CORSMiddleware</code> im Backend prüft strikt den <code>Origin</code>-Header eingehender Requests gegen eine Whitelist (<code>AllowedOrigins</code>). Credentials (Cookies) werden nur für vertrauenswürdige Ursprünge akzeptiert (<code>Access-Control-Allow-Credentials: true</code>).</li>
+</ul>
+</li>
+<li>
+<p><strong>3.1.2.1.3. Content Security Policy (CSP)</strong>
+    In der <code>index.html</code> wird eine strikte CSP via Meta-Tag durchgesetzt:
+    <code>default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; ...</code>
+    Dies beschränkt das Laden von Ressourcen (Skripte, Styles, Bilder) ausschließlich auf die eigene Origin und verhindert effektiv das Nachladen von Schadcode oder das Exfiltrieren von Daten an fremde Server.</p>
+</li>
+</ul>
+<h4 id="3122-daten-und-sitzungssicherheit">3.1.2.2. Daten- und Sitzungssicherheit<a class="headerlink" href="#3122-daten-und-sitzungssicherheit" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p><strong>3.1.2.2.1. Sichere Handhabung von Sitzungs- und Authentifizierungsdaten</strong></p>
+<ul>
+<li><strong>Storage:</strong> Die Session-ID verlässt niemals den geschützten <code>HttpOnly</code>-Cookie-Container und ist somit für clientseitiges JavaScript nicht auslesbar.</li>
+<li><strong>Inaktivitäts-Timeout:</strong> Der <code>AutoLogoutContext</code> und der Hook <code>useSession.js</code> überwachen Benutzerinteraktionen (Mausbewegungen, Tastatureingaben). Nach <strong>15 Minuten</strong> Inaktivität wird automatisch der Logout-Prozess angestoßen, der die Session im Backend invalidiert und lokale States bereinigt.</li>
+</ul>
+</li>
+<li>
+<p><strong>3.1.2.2.2. API-Kommunikation</strong>
+    Die gesamte Kommunikation zwischen Frontend und Backend ist für die Nutzung über HTTPS ausgelegt. Sensible Daten (wie Passwörter) werden niemals als URL-Parameter, sondern ausschließlich im JSON-Body von POST-Requests übertragen.</p>
+</li>
+</ul>
+<hr />
+<h2 id="32-erklarung-aller-nicht-sicheren-parts-begrundung">3.2. Erklärung aller nicht-sicheren Parts &amp; Begründung<a class="headerlink" href="#32-erklarung-aller-nicht-sicheren-parts-begrundung" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Abhängigkeit von Client-Side Encryption (Trust on First Use):</strong></p>
+<ul>
+<li><strong>Status:</strong> Die Sicherheit der Tresor-Daten steht und fällt mit der Integrität des vom Server ausgelieferten JavaScript-Codes (<code>crypto.js</code>).</li>
+<li><strong>Begründung:</strong> Dies ist ein fundamentales architektonisches Risiko webbasierter End-to-End-verschlüsselter Anwendungen. Ein kompromittierter Server könnte manipulierten Code ausliefern, der das Master-Passwort abgreift. Dieses Risiko wird durch CSP und strikte Server-Sicherheit minimiert, lässt sich aber ohne native Client-Applikation nicht vollständig eliminieren.</li>
+</ul>
+</li>
+<li>
+<p><strong>Server-Side Encryption Key im Speicher:</strong></p>
+<ul>
+<li><strong>Status:</strong> Der <code>MasterEncryptionKey</code> zur Entschlüsselung der MFA-Secrets liegt zur Laufzeit im Arbeitsspeicher des Servers.</li>
+<li><strong>Begründung:</strong> Dies ist notwendig, um die TOTP-Verifizierung durchzuführen. Eine sicherere Alternative wäre der Einsatz eines Hardware Security Modules (HSM) oder eines externen Key Management Services (KMS), was jedoch die Komplexität und Kosten für dieses Projekt unverhältnismäßig steigern würde.</li>
+</ul>
+</li>
+<li>
+<p><strong>Zentrales Session-Management via Redis:</strong></p>
+<ul>
+<li><strong>Status:</strong> Sessions werden stateful in Redis gespeichert, statt stateless JWTs zu verwenden.</li>
+<li><strong>Begründung:</strong> Dies ist eine bewusste Sicherheitsentscheidung. Stateful Sessions ermöglichen im Gegensatz zu JWTs eine <strong>sofortige Invalidierung</strong> (Revocation) bei Sicherheitsvorfällen oder Logout. Der minimale Performance-Overhead durch den Redis-Lookup wird zugunsten der höheren Sicherheit in Kauf genommen.</li>
+</ul>
+</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -24,7 +24,7 @@ Ein sicherer Online-Passwort-Manager zur zentralen Verwaltung und Verschlüsselu
 
 **Backend:**
 - Golang
-- SQL-Datenbank
+- SQL-Datenbank (PostgreSQL)
 - RESTful API
 
 **Frontend:**
@@ -32,12 +32,47 @@ Ein sicherer Online-Passwort-Manager zur zentralen Verwaltung und Verschlüsselu
 - Tailwind CSS
 - Responsive Design
 
-### Sicherheitsanforderungen
-
-Detaillierte Sicherheitsanforderungen finden Sie in der Datei [`SecurityRequirements.md`](SecurityRequirements.md).
+**Infrastructure:**
+- Kubernetes (K3s)
+- Docker
 
 ### Dokumentation
 
-- [`architecture.md`](architecture.md) - Detaillierte Systemarchitektur und Kubernetes-Deployment
-- [`roadmap.md`](roadmap.md) - Entwicklungs-Roadmap mit Phasen und Meilensteinen
-- [`SecurityRequirements.md`](SecurityRequirements.md) - Verbindliche Sicherheitsanforderungen (SR-1 bis SR-5)
+Die vollständige Dokumentation befindet sich im `docs/` Ordner.
+
+- [Projektübersicht](docs/01_Projektübersicht.md)
+- [Threat Modeling](docs/02_ThreatModeling.md)
+- [Implementierung & Anwendungs-Sicherheit](docs/03_Implementierung%20&%20Anwendungs‐Sicherheit.md)
+- [Deployment & CI/CD](docs/04_Deployment_CI_CD.md)
+- [Lessons Learned](docs/05_Lessons_Learned.md)
+- [Security Requirements](docs/SecurityRequirements.md)
+- [K3s Setup Guide](docs/K3S_SETUP.md)
+
+### Getting Started
+
+#### Voraussetzungen
+
+- Docker
+- Kubernetes Cluster mit K3s
+- Make
+- Python & Pip (für Dokumentation)
+
+#### Installation & Ausführung
+
+Das Projekt nutzt ein `Makefile` zur Automatisierung.
+
+**Lokales Setup (mit K3s):**
+
+```bash
+make setup
+```
+
+Dieser Befehl lädt die Docker-Images herunter und wendet die Kubernetes-Manifeste an.
+
+**Dokumentation lokal starten:**
+
+```bash
+make docs-serve
+```
+
+Die Dokumentation ist dann unter `http://127.0.0.1:8000` erreichbar.

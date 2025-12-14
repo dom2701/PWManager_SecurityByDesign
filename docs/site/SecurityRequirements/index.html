@@ -1,0 +1,1412 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Dokumentation für den Password Manager">
+      
+      
+        <meta name="author" content="Thgagi, dom2701">
+      
+      
+      
+        <link rel="prev" href="../02_ThreatModeling/">
+      
+      
+        <link rel="next" href="../03_Implementierung%20%26%20Anwendungs%E2%80%90Sicherheit/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>Security Requirements - PWManager SecurityByDesign</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#security-requirements" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="PWManager SecurityByDesign" class="md-header__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PWManager SecurityByDesign
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Security Requirements
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Projektübersicht
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../02_ThreatModeling/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Threat Modeling
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Security Requirements
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../03_Implementierung%20%26%20Anwendungs%E2%80%90Sicherheit/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Implementierung
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../04_Deployment_CI_CD/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Deployment & CI/CD
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../K3S_SETUP/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  K3s Setup
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../05_Lessons_Learned/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Lessons Learned
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PWManager SecurityByDesign" class="md-nav__button md-logo" aria-label="PWManager SecurityByDesign" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PWManager SecurityByDesign
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01_Projekt%C3%BCbersicht/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Projektübersicht
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02_ThreatModeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Threat Modeling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Security Requirements
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Requirements
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ubersicht" class="md-nav__link">
+    <span class="md-ellipsis">
+      Übersicht
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sr-1-verschlusselung-der-secrets-at-rest" class="md-nav__link">
+    <span class="md-ellipsis">
+      SR-1: Verschlüsselung der Secrets at Rest
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SR-1: Verschlüsselung der Secrets at Rest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anforderung" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anforderung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technische-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technische Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#begrundung" class="md-nav__link">
+    <span class="md-ellipsis">
+      Begründung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validierung" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validierung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sr-2-sicheres-password-hashing" class="md-nav__link">
+    <span class="md-ellipsis">
+      SR-2: Sicheres Password-Hashing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SR-2: Sicheres Password-Hashing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anforderung_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anforderung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technische-details_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technische Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#begrundung_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Begründung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validierung_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validierung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sr-3-zero-knowledge-architektur-fur-secrets" class="md-nav__link">
+    <span class="md-ellipsis">
+      SR-3: Zero-Knowledge-Architektur für Secrets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SR-3: Zero-Knowledge-Architektur für Secrets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anforderung_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anforderung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technische-details_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technische Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architektur-prinzipien" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architektur-Prinzipien
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#begrundung_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Begründung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validierung_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validierung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sr-4-sichere-session-verwaltung-mit-automatischer-timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      SR-4: Sichere Session-Verwaltung mit automatischer Timeout
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SR-4: Sichere Session-Verwaltung mit automatischer Timeout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anforderung_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anforderung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technische-details_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technische Details
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#session-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Session-Lifecycle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#begrundung_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Begründung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validierung_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validierung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sr-5-audit-logging-aller-sicherheitskritischen-aktionen" class="md-nav__link">
+    <span class="md-ellipsis">
+      SR-5: Audit-Logging aller sicherheitskritischen Aktionen
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SR-5: Audit-Logging aller sicherheitskritischen Aktionen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anforderung_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anforderung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technische-details_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technische Details
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Technische Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#log-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Log-Format
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#action-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Action-Types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verbotene-inhalte-in-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verbotene Inhalte in Logs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#begrundung_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Begründung
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validierung_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validierung
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compliance-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      Compliance Matrix
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Review &amp; Updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anhang-referenzen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anhang: Referenzen
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03_Implementierung%20%26%20Anwendungs%E2%80%90Sicherheit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementierung
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04_Deployment_CI_CD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment & CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../K3S_SETUP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    K3s Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05_Lessons_Learned/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lessons Learned
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="security-requirements">Security Requirements<a class="headerlink" href="#security-requirements" title="Permanent link">&para;</a></h1>
+<p><strong>Projekt:</strong> Passwort Manager<br />
+<strong>Version:</strong> 2.0<br />
+<strong>Stand:</strong> 14. Dezember 2025</p>
+<hr />
+<h2 id="ubersicht">Übersicht<a class="headerlink" href="#ubersicht" title="Permanent link">&para;</a></h2>
+<p>Dieses Dokument definiert die verbindlichen Sicherheitsanforderungen für den Passwort-Manager. Alle Anforderungen sind als <strong>MUSS-Kriterien</strong> zu verstehen und müssen in der Implementierung vollständig erfüllt werden.</p>
+<p>Die Anforderungen basieren auf dem <strong>STRIDE-Bedrohungsmodell</strong> und adressieren folgende Bedrohungskategorien:
+- <strong>S</strong> - Spoofing (Identitätsfälschung)
+- <strong>T</strong> - Tampering (Manipulation)
+- <strong>R</strong> - Repudiation (Nicht-Abstreitbarkeit)
+- <strong>I</strong> - Information Disclosure (Informationsoffenlegung)
+- <strong>D</strong> - Denial of Service (Dienstverweigerung)
+- <strong>E</strong> - Elevation of Privilege (Rechteausweitung)</p>
+<hr />
+<h2 id="sr-1-verschlusselung-der-secrets-at-rest">SR-1: Verschlüsselung der Secrets at Rest<a class="headerlink" href="#sr-1-verschlusselung-der-secrets-at-rest" title="Permanent link">&para;</a></h2>
+<h3 id="anforderung">Anforderung<a class="headerlink" href="#anforderung" title="Permanent link">&para;</a></h3>
+<p>Alle gespeicherten Secrets (Passwörter, API-Keys) <strong>MÜSSEN</strong> in der Datenbank mit <strong>AES-256-GCM</strong> verschlüsselt werden. </p>
+<p>Der Encryption-Key darf <strong>NICHT</strong> im Code oder in der Datenbank selbst gespeichert sein, sondern <strong>MUSS</strong> aus dem User-Master-Password abgeleitet werden (z.B. via <strong>PBKDF2</strong> mit mindestens <strong>100.000 Iterationen</strong>).</p>
+<h3 id="technische-details">Technische Details<a class="headerlink" href="#technische-details" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Spezifikation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Verschlüsselungsalgorithmus</strong></td>
+<td>AES-256-GCM</td>
+</tr>
+<tr>
+<td><strong>Key-Derivation-Funktion</strong></td>
+<td>PBKDF2</td>
+</tr>
+<tr>
+<td><strong>Minimale Iterationen</strong></td>
+<td>100.000</td>
+</tr>
+<tr>
+<td><strong>Salt</strong></td>
+<td>Unique per Vault, mindestens 32 Bytes</td>
+</tr>
+<tr>
+<td><strong>Key-Speicherung</strong></td>
+<td>Niemals im Code oder in der Datenbank</td>
+</tr>
+</tbody>
+</table>
+<h3 id="begrundung">Begründung<a class="headerlink" href="#begrundung" title="Permanent link">&para;</a></h3>
+<p>Schutz vor <strong>Information Disclosure</strong> bei DB-Compromise.</p>
+<p><strong>STRIDE-Kategorie:</strong> I (Information Disclosure)</p>
+<h3 id="validierung">Validierung<a class="headerlink" href="#validierung" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Verschlüsselungsalgorithmus ist AES-256-GCM</li>
+<li>[ ] Key-Derivation verwendet PBKDF2 mit ≥100.000 Iterationen</li>
+<li>[ ] Keys werden niemals persistent gespeichert</li>
+<li>[ ] Jeder Vault hat einen eindeutigen Salt</li>
+</ul>
+<hr />
+<h2 id="sr-2-sicheres-password-hashing">SR-2: Sicheres Password-Hashing<a class="headerlink" href="#sr-2-sicheres-password-hashing" title="Permanent link">&para;</a></h2>
+<h3 id="anforderung_1">Anforderung<a class="headerlink" href="#anforderung_1" title="Permanent link">&para;</a></h3>
+<p>Alle Benutzerpasswörter <strong>MÜSSEN</strong> serverseitig mit dem <strong>Argon2id</strong> Algorithmus gehasht werden. </p>
+<p>Es <strong>MUSS</strong> für jeden Benutzer ein zufälliger, eindeutiger Salt (mindestens 16 Bytes) generiert werden.</p>
+<h3 id="technische-details_1">Technische Details<a class="headerlink" href="#technische-details_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Spezifikation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Algorithmus</strong></td>
+<td>Argon2id</td>
+</tr>
+<tr>
+<td><strong>Memory</strong></td>
+<td>64 MB (65536 KB)</td>
+</tr>
+<tr>
+<td><strong>Iterationen</strong></td>
+<td>3</td>
+</tr>
+<tr>
+<td><strong>Parallelismus</strong></td>
+<td>4 Threads</td>
+</tr>
+<tr>
+<td><strong>Salt-Länge</strong></td>
+<td>16 Bytes</td>
+</tr>
+<tr>
+<td><strong>Key-Länge</strong></td>
+<td>32 Bytes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="begrundung_1">Begründung<a class="headerlink" href="#begrundung_1" title="Permanent link">&para;</a></h3>
+<p>Schutz vor <strong>Brute-Force-Angriffen</strong> und <strong>Rainbow-Table-Attacken</strong> auf die Passwort-Datenbank.</p>
+<p><strong>STRIDE-Kategorien:</strong> I (Information Disclosure), S (Spoofing)</p>
+<h3 id="validierung_1">Validierung<a class="headerlink" href="#validierung_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Algorithmus ist Argon2id</li>
+<li>[ ] Parameter entsprechen den Sicherheitsstandards (OWASP Empfehlung)</li>
+<li>[ ] Salt ist zufällig und eindeutig pro User</li>
+</ul>
+<hr />
+<h2 id="sr-3-zero-knowledge-architektur-fur-secrets">SR-3: Zero-Knowledge-Architektur für Secrets<a class="headerlink" href="#sr-3-zero-knowledge-architektur-fur-secrets" title="Permanent link">&para;</a></h2>
+<h3 id="anforderung_2">Anforderung<a class="headerlink" href="#anforderung_2" title="Permanent link">&para;</a></h3>
+<p>Der Backend-Server darf zu <strong>KEINEM Zeitpunkt</strong> Zugriff auf entschlüsselte Secrets haben. </p>
+<p>Verschlüsselung und Entschlüsselung <strong>MÜSSEN</strong> clientseitig (im Frontend) mit dem vom User-Password abgeleiteten Key erfolgen. Der Server speichert ausschließlich verschlüsselte Blobs.</p>
+<h3 id="technische-details_2">Technische Details<a class="headerlink" href="#technische-details_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Komponente</th>
+<th>Verantwortung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Client (Browser)</strong></td>
+<td>Key-Derivation, Ver-/Entschlüsselung</td>
+</tr>
+<tr>
+<td><strong>Backend</strong></td>
+<td>Speicherung verschlüsselter Blobs</td>
+</tr>
+<tr>
+<td><strong>Datenbank</strong></td>
+<td>Persistierung verschlüsselter Daten</td>
+</tr>
+</tbody>
+</table>
+<h3 id="architektur-prinzipien">Architektur-Prinzipien<a class="headerlink" href="#architektur-prinzipien" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Master-Passwort</strong> verlässt niemals den Browser</li>
+<li><strong>Verschlüsselungs-Keys</strong> werden nur im Browser-Memory gehalten</li>
+<li><strong>Server</strong> verarbeitet nur verschlüsselte Daten</li>
+<li><strong>API-Endpoints</strong> akzeptieren ausschließlich verschlüsselte Payloads</li>
+</ol>
+<h3 id="begrundung_2">Begründung<a class="headerlink" href="#begrundung_2" title="Permanent link">&para;</a></h3>
+<p>Minimierung der Angriffsfläche, Schutz bei Backend-Compromise.</p>
+<p><strong>STRIDE-Kategorie:</strong> I (Information Disclosure)</p>
+<h3 id="validierung_2">Validierung<a class="headerlink" href="#validierung_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Crypto-Operationen erfolgen ausschließlich im Frontend</li>
+<li>[ ] Backend-Code enthält keine Entschlüsselungslogik</li>
+<li>[ ] API-Endpoints verarbeiten nur verschlüsselte Daten</li>
+</ul>
+<hr />
+<h2 id="sr-4-sichere-session-verwaltung-mit-automatischer-timeout">SR-4: Sichere Session-Verwaltung mit automatischer Timeout<a class="headerlink" href="#sr-4-sichere-session-verwaltung-mit-automatischer-timeout" title="Permanent link">&para;</a></h2>
+<h3 id="anforderung_3">Anforderung<a class="headerlink" href="#anforderung_3" title="Permanent link">&para;</a></h3>
+<p>Sessions <strong>MÜSSEN</strong> nach <strong>15 Minuten Inaktivität</strong> automatisch invalidiert werden. </p>
+<p>Session-Tokens <strong>MÜSSEN</strong> als <strong>httpOnly, Secure, SameSite=Strict</strong> Cookies implementiert werden und dürfen <strong>NICHT</strong> in localStorage gespeichert werden. </p>
+<p>Nach Logout <strong>MUSS</strong> das Session-Token serverseitig sofort revoked werden.</p>
+<h3 id="technische-details_3">Technische Details<a class="headerlink" href="#technische-details_3" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Spezifikation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cookie-Flags</strong></td>
+<td><code>httpOnly; Secure; SameSite=Strict</code></td>
+</tr>
+<tr>
+<td><strong>Inaktivitäts-Timeout</strong></td>
+<td>15 Minuten</td>
+</tr>
+<tr>
+<td><strong>Token-Storage</strong></td>
+<td>Ausschließlich in Cookies (kein localStorage)</td>
+</tr>
+<tr>
+<td><strong>Session-Revocation</strong></td>
+<td>Sofort bei Logout</td>
+</tr>
+<tr>
+<td><strong>Backend-Storage</strong></td>
+<td>Redis mit TTL</td>
+</tr>
+</tbody>
+</table>
+<h3 id="session-lifecycle">Session-Lifecycle<a class="headerlink" href="#session-lifecycle" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>1. Login → Token-Generierung → Redis (TTL: 15 Min)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>2. Request → Token-Validierung → TTL-Refresh
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>3. 15 Min Inaktivität → Token-Expiry → Auto-Logout
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>4. Logout → Token-Revocation → Redis-Delete
+</code></pre></div>
+<h3 id="begrundung_3">Begründung<a class="headerlink" href="#begrundung_3" title="Permanent link">&para;</a></h3>
+<p>Schutz vor <strong>Session-Hijacking</strong> und <strong>XSS-Angriffen</strong>.</p>
+<p><strong>STRIDE-Kategorien:</strong> S (Spoofing), E (Elevation of Privilege)</p>
+<h3 id="validierung_3">Validierung<a class="headerlink" href="#validierung_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Cookies haben httpOnly, Secure, SameSite=Strict Flags</li>
+<li>[ ] Inaktivitäts-Timeout ist auf 15 Minuten konfiguriert</li>
+<li>[ ] localStorage wird nicht für Session-Token verwendet</li>
+<li>[ ] Logout invalidiert Token serverseitig in Redis</li>
+</ul>
+<hr />
+<h2 id="sr-5-audit-logging-aller-sicherheitskritischen-aktionen">SR-5: Audit-Logging aller sicherheitskritischen Aktionen<a class="headerlink" href="#sr-5-audit-logging-aller-sicherheitskritischen-aktionen" title="Permanent link">&para;</a></h2>
+<h3 id="anforderung_4">Anforderung<a class="headerlink" href="#anforderung_4" title="Permanent link">&para;</a></h3>
+<p>Folgende Aktionen <strong>MÜSSEN</strong> unveränderbar geloggt werden:</p>
+<ul>
+<li>Login (Erfolg/Fehlgeschlagen)</li>
+<li>Secret-Zugriff (Lesen/Erstellen/Löschen)</li>
+<li>MFA-Änderungen</li>
+<li>Master-Password-Änderungen</li>
+</ul>
+<p>Logs <strong>MÜSSEN</strong> folgende Informationen enthalten:
+- User-ID
+- Timestamp
+- IP-Adresse
+- Action-Type</p>
+<p>Logs dürfen <strong>NIEMALS</strong> entschlüsselte Secrets oder Passwörter enthalten.</p>
+<h3 id="technische-details_4">Technische Details<a class="headerlink" href="#technische-details_4" title="Permanent link">&para;</a></h3>
+<h4 id="log-format">Log-Format<a class="headerlink" href="#log-format" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Feld</th>
+<th>Typ</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>log_id</code></td>
+<td>UUID</td>
+<td>Eindeutiger Log-Eintrag-Identifier</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>UUID</td>
+<td>Referenz auf User</td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td>String</td>
+<td>Typ der Aktion (siehe unten)</td>
+</tr>
+<tr>
+<td><code>ip_address</code></td>
+<td>String</td>
+<td>IPv4/IPv6 Adresse</td>
+</tr>
+<tr>
+<td><code>user_agent</code></td>
+<td>String</td>
+<td>Browser/Client Information</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>DateTime</td>
+<td>ISO 8601 Format (UTC)</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>String</td>
+<td>SUCCESS / FAILURE</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>JSON</td>
+<td>Zusätzliche Informationen (optional)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="action-types">Action-Types<a class="headerlink" href="#action-types" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>AUTH_LOGIN_SUCCESS
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>AUTH_LOGIN_FAILURE
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>AUTH_LOGOUT
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>SECRET_CREATE
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>SECRET_READ
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>SECRET_UPDATE
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>SECRET_DELETE
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>MFA_ENABLE
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>MFA_DISABLE
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>PASSWORD_CHANGE
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>VAULT_CREATE
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>VAULT_DELETE
+</code></pre></div>
+<h3 id="verbotene-inhalte-in-logs">Verbotene Inhalte in Logs<a class="headerlink" href="#verbotene-inhalte-in-logs" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Entschlüsselte Passwörter</li>
+<li>Master-Passwörter</li>
+<li>Verschlüsselungs-Keys</li>
+<li>Session-Tokens (in Plaintext)</li>
+<li>MFA-Secrets</li>
+</ul>
+<h3 id="begrundung_4">Begründung<a class="headerlink" href="#begrundung_4" title="Permanent link">&para;</a></h3>
+<p>Non-Repudiation, Incident Response, Compliance.</p>
+<p><strong>STRIDE-Kategorie:</strong> R (Repudiation)</p>
+<h3 id="validierung_4">Validierung<a class="headerlink" href="#validierung_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] Audit-Logging ist für alle definierten Aktionen implementiert</li>
+<li>[ ] Log-Einträge sind unveränderbar (Append-Only)</li>
+<li>[ ] Logs enthalten alle erforderlichen Felder</li>
+<li>[ ] Keine sensiblen Daten in Logs vorhanden</li>
+<li>[ ] Log-Retention ist konfiguriert (mindestens 90 Tage)</li>
+</ul>
+<hr />
+<h2 id="compliance-matrix">Compliance Matrix<a class="headerlink" href="#compliance-matrix" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>STRIDE</th>
+<th>Kritikalität</th>
+<th>Implementierungsstatus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SR-1</td>
+<td>I</td>
+<td>Kritisch</td>
+<td>Implementiert</td>
+</tr>
+<tr>
+<td>SR-2</td>
+<td>I, S</td>
+<td>Kritisch</td>
+<td>Implementiert</td>
+</tr>
+<tr>
+<td>SR-3</td>
+<td>I</td>
+<td>Kritisch</td>
+<td>Implementiert</td>
+</tr>
+<tr>
+<td>SR-4</td>
+<td>S, E</td>
+<td>Hoch</td>
+<td>Teilweise umgesetzt</td>
+</tr>
+<tr>
+<td>SR-5</td>
+<td>R</td>
+<td>Hoch</td>
+<td>Implementiert</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Legende:</strong>
+- Offen
+- In Bearbeitung
+- Implementiert
+- Validiert</p>
+<hr />
+<h2 id="review-updates">Review &amp; Updates<a class="headerlink" href="#review-updates" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Datum</th>
+<th>Änderungen</th>
+<th>Autor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>Oktober 2025</td>
+<td>Initiale Version</td>
+<td>Projektteam</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="anhang-referenzen">Anhang: Referenzen<a class="headerlink" href="#anhang-referenzen" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>STRIDE-Modell:</strong> <a href="https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats">Microsoft Threat Modeling</a></li>
+<li><strong>OWASP Top 10:</strong> <a href="https://owasp.org/www-project-top-ten/">https://owasp.org/www-project-top-ten/</a></li>
+<li><strong>NIST Cryptographic Standards:</strong> <a href="https://csrc.nist.gov/publications">https://csrc.nist.gov/publications</a></li>
+<li><strong>TLS Best Practices:</strong> <a href="https://wiki.mozilla.org/Security/Server_Side_TLS">https://wiki.mozilla.org/Security/Server_Side_TLS</a></li>
+</ul>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

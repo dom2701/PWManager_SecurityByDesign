@@ -1,0 +1,49 @@
+site_name: PWManager SecurityByDesign
+site_description: Dokumentation für den Password Manager
+site_author: Thgagi, dom2701
+
+# Documentation source is the parent directory (docs/)
+docs_dir: ..
+
+theme:
+  name: material
+  language: de
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Projektübersicht: 01_Projektübersicht.md
+  - Threat Modeling: 02_ThreatModeling.md
+  - Security Requirements: SecurityRequirements.md
+  - Implementierung: 03_Implementierung & Anwendungs‐Sicherheit.md
+  - Deployment & CI/CD: 04_Deployment_CI_CD.md
+  - K3s Setup: K3S_SETUP.md
+  - Lessons Learned: 05_Lessons_Learned.md
