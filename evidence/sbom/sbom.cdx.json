@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:ee957215-9ebd-4fc5-9dfb-8676f646f273",
+  "serialNumber": "urn:uuid:24b63600-0d75-4d73-9166-292d11f92c01",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-02-01T12:17:13+00:00",
+    "timestamp": "2026-02-01T12:46:12+00:00",
     "tools": {
       "components": [
         {
@@ -20,7 +20,7 @@
       ]
     },
     "component": {
-      "bom-ref": "b0cb04ce-d383-46ee-9d74-6ea59d85a296",
+      "bom-ref": "17269692-12fc-4975-bc37-0ba76d1fcc05",
       "type": "application",
       "name": ".",
       "properties": [
@@ -33,22 +33,7 @@
   },
   "components": [
     {
-      "bom-ref": "149c0148-9213-46fa-81ec-bf356b6e4eb6",
-      "type": "application",
-      "name": "backend/go.mod",
-      "properties": [
-        {
-          "name": "aquasecurity:trivy:Class",
-          "value": "lang-pkgs"
-        },
-        {
-          "name": "aquasecurity:trivy:Type",
-          "value": "gomod"
-        }
-      ]
-    },
-    {
-      "bom-ref": "ae59c019-cfbc-4421-a027-99e6ffa33ef3",
+      "bom-ref": "69911358-fddf-436b-9bdc-2da2e80460b6",
       "type": "application",
       "name": "frontend/package-lock.json",
       "properties": [
@@ -59,6 +44,21 @@
         {
           "name": "aquasecurity:trivy:Type",
           "value": "npm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "6bb7841f-7c10-4c41-9410-ad3937007783",
+      "type": "application",
+      "name": "backend/go.mod",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:Class",
+          "value": "lang-pkgs"
+        },
+        {
+          "name": "aquasecurity:trivy:Type",
+          "value": "gomod"
         }
       ]
     },
@@ -1594,13 +1594,14 @@
   ],
   "dependencies": [
     {
-      "ref": "149c0148-9213-46fa-81ec-bf356b6e4eb6",
+      "ref": "17269692-12fc-4975-bc37-0ba76d1fcc05",
       "dependsOn": [
-        "pkg:golang/github.com/securitybydesign/pwmanager"
+        "69911358-fddf-436b-9bdc-2da2e80460b6",
+        "6bb7841f-7c10-4c41-9410-ad3937007783"
       ]
     },
     {
-      "ref": "ae59c019-cfbc-4421-a027-99e6ffa33ef3",
+      "ref": "69911358-fddf-436b-9bdc-2da2e80460b6",
       "dependsOn": [
         "pkg:npm/axios@1.13.2",
         "pkg:npm/react-dom@19.2.0",
@@ -1609,10 +1610,9 @@
       ]
     },
     {
-      "ref": "b0cb04ce-d383-46ee-9d74-6ea59d85a296",
+      "ref": "6bb7841f-7c10-4c41-9410-ad3937007783",
       "dependsOn": [
-        "149c0148-9213-46fa-81ec-bf356b6e4eb6",
-        "ae59c019-cfbc-4421-a027-99e6ffa33ef3"
+        "pkg:golang/github.com/securitybydesign/pwmanager"
       ]
     },
     {
