@@ -1,0 +1,28 @@
+Pipeline Run Evidence Summary
+================================
+Run ID: 21562796352
+Run Number: 145
+Timestamp: 2026-02-01T12:27:01Z
+Commit SHA: 352c5b2163ca71bb71c3364747ff16ab664fb7e5
+Branch/Tag: refs/heads/main
+Actor: luxario1
+
+Files Generated:
+evidence/sast/golangci-lint.xml
+evidence/sast/frontend-eslint.json
+evidence/sast/gosec-results.sarif
+evidence/sast/checkov-report.sarif
+evidence/run/run-20215082570-summary.txt
+evidence/run/run-20215288658-summary.txt
+evidence/run/run-21562796352-summary.txt
+evidence/run/run-20215160056-summary.txt
+evidence/run/run-21562708584-summary.txt
+evidence/run/frontend-lint.log
+evidence/sca/trivy-sca-report.txt
+evidence/sca/trivy-image-backend.txt
+evidence/sca/trivy-image-frontend.txt
+evidence/sbom/sbom.cdx.json
+evidence/signing/frontend-sign.log
+evidence/signing/backend-verify.json
+evidence/signing/backend-sign.log
+evidence/signing/frontend-verify.json

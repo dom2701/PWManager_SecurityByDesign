@@ -4,8 +4,8 @@ Report Summary
 ┌──────────────────────────────────────────────────────────────────────────────────┬──────────┬─────────────────┬─────────┐
 │                                      Target                                      │   Type   │ Vulnerabilities │ Secrets │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ ghcr.io/dom2701/pwmanager_securitybydesign/backend:8b4203cb4fe961bb5b36aa1ee952- │  alpine  │        0        │    -    │
-│ 426d0bb0ab86 (alpine 3.23.0)                                                     │          │                 │         │
+│ ghcr.io/dom2701/pwmanager_securitybydesign/backend:352c5b2163ca71bb71c3364747ff- │  alpine  │        2        │    -    │
+│ 16ab664fb7e5 (alpine 3.23.0)                                                     │          │                 │         │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ app/api                                                                          │ gobinary │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
@@ -15,3 +15,28 @@ Legend:
 - '-': Not scanned
 - '0': Clean (no security findings detected)
 
+
+For OSS Maintainers: VEX Notice
+--------------------------------
+If you're an OSS maintainer and Trivy has detected vulnerabilities in your project that you believe are not actually exploitable, consider issuing a VEX (Vulnerability Exploitability eXchange) statement.
+VEX allows you to communicate the actual status of vulnerabilities in your project, improving security transparency and reducing false positives for your users.
+Learn more and start using VEX: https://trivy.dev/docs/v0.68/guide/supply-chain/vex/repo#publishing-vex-documents
+
+To disable this notice, set the TRIVY_DISABLE_VEX_NOTICE environment variable.
+
+
+ghcr.io/dom2701/pwmanager_securitybydesign/backend:352c5b2163ca71bb71c3364747ff16ab664fb7e5 (alpine 3.23.0)
+===========================================================================================================
+Total: 2 (CRITICAL: 2)
+
+┌────────────┬────────────────┬──────────┬────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│  Library   │ Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                            Title                             │
+├────────────┼────────────────┼──────────┼────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ libcrypto3 │ CVE-2025-15467 │ CRITICAL │ fixed  │ 3.5.4-r0          │ 3.5.5-r0      │ openssl: OpenSSL: Remote code execution or Denial of Service │
+│            │                │          │        │                   │               │ via oversized Initialization...                              │
+│            │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2025-15467                   │
+├────────────┤                │          │        │                   │               │                                                              │
+│ libssl3    │                │          │        │                   │               │                                                              │
+│            │                │          │        │                   │               │                                                              │
+│            │                │          │        │                   │               │                                                              │
+└────────────┴────────────────┴──────────┴────────┴───────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘
