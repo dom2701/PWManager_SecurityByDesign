@@ -4,8 +4,8 @@ Report Summary
 ┌──────────────────────────────────────────────────────────────────────────────────┬──────────┬─────────────────┬─────────┐
 │                                      Target                                      │   Type   │ Vulnerabilities │ Secrets │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ ghcr.io/dom2701/pwmanager_securitybydesign/frontend:8b4203cb4fe961bb5b36aa1ee95- │  alpine  │        0        │    -    │
-│ 2426d0bb0ab86 (alpine 3.23.0)                                                    │          │                 │         │
+│ ghcr.io/dom2701/pwmanager_securitybydesign/frontend:a87bbcac72ea2b130216a41f684- │  alpine  │        0        │    -    │
+│ 27455490425c2 (alpine 3.23.3)                                                    │          │                 │         │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ opt/yarn-v1.22.22/package.json                                                   │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
@@ -60,9 +60,6 @@ Report Summary
 │ usr/local/lib/node_modules/npm/node_modules/@sigstore/protobuf-specs/package.js- │ node-pkg │        0        │    -    │
 │ on                                                                               │          │                 │         │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ usr/local/lib/node_modules/npm/node_modules/@sigstore/sign/node_modules/proc-lo- │ node-pkg │        0        │    -    │
-│ g/package.json                                                                   │          │                 │         │
-├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/@sigstore/sign/package.json          │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/@sigstore/tuf/package.json           │ node-pkg │        0        │    -    │
@@ -70,9 +67,6 @@ Report Summary
 │ usr/local/lib/node_modules/npm/node_modules/@sigstore/verify/package.json        │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/@tufjs/canonical-json/package.json   │ node-pkg │        0        │    -    │
-├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ usr/local/lib/node_modules/npm/node_modules/@tufjs/models/node_modules/minimatc- │ node-pkg │        0        │    -    │
-│ h/package.json                                                                   │          │                 │         │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/@tufjs/models/package.json           │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
@@ -86,13 +80,9 @@ Report Summary
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/archy/package.json                   │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ usr/local/lib/node_modules/npm/node_modules/balanced-match/package.json          │ node-pkg │        0        │    -    │
-├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/bin-links/package.json               │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/binary-extensions/package.json       │ node-pkg │        0        │    -    │
-├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
-│ usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json         │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
 │ usr/local/lib/node_modules/npm/node_modules/cacache/package.json                 │ node-pkg │        0        │    -    │
 ├──────────────────────────────────────────────────────────────────────────────────┼──────────┼─────────────────┼─────────┤
