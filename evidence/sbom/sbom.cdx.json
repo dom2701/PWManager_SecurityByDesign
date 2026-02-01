@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:2267205f-dc6a-4c9e-abdf-f30b19d287ed",
+  "serialNumber": "urn:uuid:ee957215-9ebd-4fc5-9dfb-8676f646f273",
   "version": 1,
   "metadata": {
-    "timestamp": "2025-12-14T22:28:23+00:00",
+    "timestamp": "2026-02-01T12:17:13+00:00",
     "tools": {
       "components": [
         {
@@ -20,7 +20,7 @@
       ]
     },
     "component": {
-      "bom-ref": "d8d53eda-88e9-42be-80f5-7b23a0e188dd",
+      "bom-ref": "b0cb04ce-d383-46ee-9d74-6ea59d85a296",
       "type": "application",
       "name": ".",
       "properties": [
@@ -33,7 +33,7 @@
   },
   "components": [
     {
-      "bom-ref": "2f27eecb-65a9-4e38-b0a9-47b26b15e065",
+      "bom-ref": "149c0148-9213-46fa-81ec-bf356b6e4eb6",
       "type": "application",
       "name": "backend/go.mod",
       "properties": [
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "bom-ref": "96de0bbd-4cee-48c2-a382-9488c63890a9",
+      "bom-ref": "ae59c019-cfbc-4421-a027-99e6ffa33ef3",
       "type": "application",
       "name": "frontend/package-lock.json",
       "properties": [
@@ -1594,13 +1594,13 @@
   ],
   "dependencies": [
     {
-      "ref": "2f27eecb-65a9-4e38-b0a9-47b26b15e065",
+      "ref": "149c0148-9213-46fa-81ec-bf356b6e4eb6",
       "dependsOn": [
         "pkg:golang/github.com/securitybydesign/pwmanager"
       ]
     },
     {
-      "ref": "96de0bbd-4cee-48c2-a382-9488c63890a9",
+      "ref": "ae59c019-cfbc-4421-a027-99e6ffa33ef3",
       "dependsOn": [
         "pkg:npm/axios@1.13.2",
         "pkg:npm/react-dom@19.2.0",
@@ -1609,10 +1609,10 @@
       ]
     },
     {
-      "ref": "d8d53eda-88e9-42be-80f5-7b23a0e188dd",
+      "ref": "b0cb04ce-d383-46ee-9d74-6ea59d85a296",
       "dependsOn": [
-        "2f27eecb-65a9-4e38-b0a9-47b26b15e065",
-        "96de0bbd-4cee-48c2-a382-9488c63890a9"
+        "149c0148-9213-46fa-81ec-bf356b6e4eb6",
+        "ae59c019-cfbc-4421-a027-99e6ffa33ef3"
       ]
     },
     {
