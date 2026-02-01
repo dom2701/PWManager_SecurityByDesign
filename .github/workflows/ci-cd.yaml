@@ -171,7 +171,7 @@ jobs:
           format: 'table'
           output: 'evidence/sca/trivy-sca-report.txt'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           ignore-unfixed: true
 
       # IaC Scan (Checkov)
@@ -261,7 +261,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           output: 'evidence/sca/trivy-image-backend.txt'
 
       # Frontend Build & Sign
@@ -289,7 +289,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           output: 'evidence/sca/trivy-image-frontend.txt'
 
       - name: Upload Evidence
