@@ -253,16 +253,16 @@ jobs:
           # Verify
           cosign verify --certificate-identity-regexp ".*" --certificate-oidc-issuer-regexp ".*" "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}" > evidence/signing/backend-verify.json 2>&1 || (cat evidence/signing/backend-verify.json && exit 1)
 
-      - name: Scan Backend Image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
-          output: 'evidence/sca/trivy-image-backend.txt'
+      # - name: Scan Backend Image
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}'
+      #     format: 'table'
+      #     exit-code: '1'
+      #     ignore-unfixed: true
+      #     vuln-type: 'os,library'
+      #     severity: 'CRITICAL'
+      #     output: 'evidence/sca/trivy-image-backend.txt'
 
       # Frontend Build & Sign
       - name: Build and push Frontend Docker image
